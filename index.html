@@ -4,6 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>AjustadorGastos</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#185FA5">
+  <meta name="mobile-web-app-capable" content="yes">
+
+  <!-- iOS Safari -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="AjGastos">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+
+  <!-- Descripción y SEO mínimo -->
+  <meta name="description" content="Gestión de comprobantes y provisiones para ajustadores de seguros">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -737,6 +751,14 @@ function animFill(id,target,dur){
   const steps=60,inc=target/steps,ms=dur/steps;
   let curr=0;
   const t=setInterval(()=>{curr=Math.min(curr+inc,target);el.style.width=curr+'%';if(curr>=target)clearInterval(t);},ms);
+}
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
 }
 </script>
 </body>
