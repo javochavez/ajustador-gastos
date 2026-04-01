@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>AjustadorGastos</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --acc: #185FA5; --acc-l: #E6F1FB; --acc-b: #B5D4F4;
+      --ok: #3B6D11; --ok-l: #EAF3DE; --ok-b: #C0DD97;
+      --err: #A32D2D; --err-l: #FCEBEB; --err-b: #F7C1C1;
+      --warn-l: #FAEEDA;
+      --bg: #ffffff; --bg2: #f5f4f1; --bg3: #eeede9;
+      --txt: #1a1a1a; --txt2: #6b6a66; --txt3: #9b9a96;
+      --bdr: rgba(0,0,0,0.12); --bdr2: rgba(0,0,0,0.22);
+      --rad: 8px; --rad-lg: 12px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1a1a1a; --bg2: #242424; --bg3: #2e2e2e;
+        --txt: #f0efe9; --txt2: #a0a09a; --txt3: #6a6a64;
+        --bdr: rgba(255,255,255,0.12); --bdr2: rgba(255,255,255,0.22);
+        --acc-l: #0d2d4d; --ok-l: #1a3008; --err-l: #2d0f0f;
+        --acc-b: #0d3a6e; --ok-b: #1e4a0a; --err-b: #5a1e1e;
+      }
+    }
+    html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--txt); font-size: 14px; }
+    .app { min-height: 100vh; background: var(--bg3); }
+
+    /* AUTH */
+    #auth-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+    .auth-box { background: var(--bg); border: 0.5px solid var(--bdr); border-radius: var(--rad-lg); padding: 32px 28px; width: 100%; max-width: 360px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+    .auth-logo { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+    .auth-logo span { color: var(--acc); }
+    .auth-sub { font-size: 13px; color: var(--txt2); margin-bottom: 24px; }
+    .auth-tabs { display: flex; border: 0.5px solid var(--bdr); border-radius: var(--rad); overflow: hidden; margin-bottom: 18px; }
+    .auth-tab { flex: 1; padding: 8px; font-size: 13px; border: none; background: transparent; cursor: pointer; color: var(--txt2); }
+    .auth-tab.active { background: var(--acc-l); color: var(--acc); font-weight: 500; }
+
+    /* MAIN LAYOUT */
+    #main-app { display: none; flex-direction: column; min-height: 100vh; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 0 16px; height: 52px; background: var(--bg); border-bottom: 0.5px solid var(--bdr); position: sticky; top: 0; z-index: 50; gap: 8px; }
+    .logo { font-size: 15px; font-weight: 600; white-space: nowrap; }
+    .logo span { color: var(--acc); }
+    .nav { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; flex-shrink: 1; }
+    .nav::-webkit-scrollbar { display: none; }
+    .nav button { font-size: 12px; padding: 6px 10px; border: 0.5px solid transparent; border-radius: var(--rad); background: transparent; color: var(--txt2); cursor: pointer; white-space: nowrap; }
+    .nav button.active { background: var(--acc-l); color: var(--acc); border-color: var(--acc-b); font-weight: 500; }
+    .user-area { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--acc-l); color: var(--acc); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+    .content { flex: 1; padding: 16px; max-width: 1100px; margin: 0 auto; width: 100%; }
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* COMPONENTS */
+    label { font-size: 12px; color: var(--txt2); display: block; margin-bottom: 4px; margin-top: 10px; }
+    input, select, textarea {
+      width: 100%; padding: 8px 10px; font-size: 13px; border: 0.5px solid var(--bdr2);
+      border-radius: var(--rad); background: var(--bg); color: var(--txt); outline: none;
+      font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--acc-l); }
+    textarea { resize: vertical; min-height: 60px; }
+    .btn { font-size: 13px; padding: 8px 16px; border-radius: var(--rad); cursor: pointer; border: 0.5px solid var(--bdr2); background: var(--bg); color: var(--txt); font-family: inherit; }
+    .btn-primary { background: var(--acc); color: white; border-color: var(--acc); }
+    .btn-sm { font-size: 11px; padding: 5px 10px; }
+    .btn-danger { color: var(--err); border-color: var(--err-b); }
+    .btn:hover { opacity: 0.85; }
+    .btn:active { transform: scale(0.98); }
+    .card { background: var(--bg); border: 0.5px solid var(--bdr); border-radius: var(--rad-lg); padding: 14px 16px; }
+    .card-title { font-size: 12px; color: var(--txt2); margin-bottom: 4px; }
+    .card-value { font-size: 22px; font-weight: 600; }
+    .card-sub { font-size: 11px; color: var(--txt3); margin-top: 2px; }
+    .sec-title { font-size: 14px; font-weight: 500; margin-bottom: 12px; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .grid4 { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; }
+    @media (max-width: 600px) {
+      .grid2, .grid3, .grid4 { grid-template-columns: 1fr 1fr; }
+      .grid4 { grid-template-columns: repeat(2, 1fr); }
+      .grid3 { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 420px) {
+      .grid2 { grid-template-columns: 1fr; }
+    }
+    .tag { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+    .tag-activo { background: var(--ok-l); color: var(--ok); }
+    .tag-cerrado { background: var(--bg2); color: var(--txt2); }
+    .tag-facturado { background: var(--acc-l); color: var(--acc); }
+    .tag-cat { background: var(--bg2); color: var(--txt2); }
+    .tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 500px; }
+    th { text-align: left; font-size: 11px; font-weight: 500; color: var(--txt2); padding: 6px 8px; border-bottom: 0.5px solid var(--bdr); white-space: nowrap; }
+    td { padding: 7px 8px; border-bottom: 0.5px solid var(--bdr); color: var(--txt); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg2); }
+    .alert { padding: 8px 12px; border-radius: var(--rad); font-size: 12px; margin-bottom: 10px; }
+    .alert-ok { background: var(--ok-l); color: var(--ok); border: 0.5px solid var(--ok-b); }
+    .alert-info { background: var(--acc-l); color: var(--acc); border: 0.5px solid var(--acc-b); }
+    .alert-err { background: var(--err-l); color: var(--err); border: 0.5px solid var(--err-b); }
+    .divider { border: none; border-top: 0.5px solid var(--bdr); margin: 14px 0; }
+    .pos { color: var(--ok); font-weight: 500; }
+    .neg { color: var(--err); font-weight: 500; }
+    .pbar-wrap { background: var(--bg2); border-radius: 4px; height: 5px; flex: 1; overflow: hidden; }
+    .pbar { height: 100%; background: var(--acc); border-radius: 4px; }
+    .flex { display: flex; gap: 8px; align-items: center; }
+    .flex-sb { justify-content: space-between; }
+    .flex-end { justify-content: flex-end; }
+    .mt { margin-top: 10px; }
+    .mt2 { margin-top: 16px; }
+    .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .bar-label { font-size: 11px; color: var(--txt2); width: 80px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bar-amt { font-size: 11px; color: var(--txt2); width: 80px; text-align: right; }
+    .loading-bar { height: 3px; background: var(--acc-l); border-radius: 2px; overflow: hidden; margin-top: 6px; }
+    .loading-fill { height: 100%; background: var(--acc); width: 0%; transition: width 0.25s; border-radius: 2px; }
+
+    /* SCAN */
+    .scan-zone { border: 1.5px dashed var(--bdr2); border-radius: var(--rad-lg); padding: 24px; text-align: center; cursor: pointer; transition: background 0.15s; }
+    .scan-zone:hover { background: var(--bg2); }
+    .scan-preview { max-width: 100%; max-height: 180px; border-radius: var(--rad); object-fit: contain; }
+
+    /* MODAL */
+    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; align-items: center; justify-content: center; padding: 16px; }
+    .modal-bg.open { display: flex; }
+    .modal { background: var(--bg); border-radius: var(--rad-lg); border: 0.5px solid var(--bdr); padding: 20px; width: 100%; max-width: 460px; max-height: 88vh; overflow-y: auto; }
+    .modal-title { font-size: 15px; font-weight: 600; margin-bottom: 14px; }
+
+    /* THUMB */
+    .thumb-wrap { width: 34px; height: 34px; border-radius: var(--rad); overflow: hidden; border: 0.5px solid var(--bdr); cursor: pointer; flex-shrink: 0; }
+    .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .img-modal-img { max-width: 100%; border-radius: var(--rad); }
+  </style>
+</head>
+<body>
+<div class="app">
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">Ajustador<span>Gastos</span></div>
+    <div class="auth-sub">Gestión de comprobantes y provisiones</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="setAuthMode('login')">Iniciar sesión</button>
+      <button class="auth-tab" onclick="setAuthMode('register')">Registrarse</button>
+    </div>
+    <div id="auth-alert"></div>
+    <label>Correo electrónico</label>
+    <input type="email" id="auth-email" placeholder="correo@ejemplo.com" autocomplete="email">
+    <label>Contraseña</label>
+    <input type="password" id="auth-pass" placeholder="Mínimo 6 caracteres" autocomplete="current-password">
+    <div id="auth-name-wrap" style="display:none;">
+      <label>Nombre completo</label>
+      <input type="text" id="auth-name" placeholder="Tu nombre">
+    </div>
+    <div class="flex flex-end mt" style="margin-top:14px;">
+      <button class="btn btn-primary" id="auth-btn" onclick="doAuth()">Entrar</button>
+    </div>
+    <div id="auth-loading" style="display:none;margin-top:8px;"><div class="loading-bar"><div class="loading-fill" id="auth-fill"></div></div></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="main-app">
+  <div class="topbar">
+    <div class="logo">Ajustador<span>Gastos</span></div>
+    <div class="nav">
+      <button class="active" onclick="showTab('dashboard',this)">Dashboard</button>
+      <button onclick="showTab('viajes',this)">Viajes</button>
+      <button onclick="showTab('captura',this)">Capturar</button>
+      <button onclick="showTab('gastos',this)">Gastos</button>
+      <button onclick="showTab('reportes',this)">Reportes</button>
+    </div>
+    <div class="user-area">
+      <div class="avatar" id="user-avatar">?</div>
+      <button class="btn btn-sm" onclick="doLogout()">Salir</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div id="tab-dashboard" class="section active">
+      <div id="kpis" class="grid4" style="margin-bottom:14px;"></div>
+      <div class="grid2">
+        <div class="card"><div class="sec-title">Gastos por categoría</div><div id="cat-chart"></div></div>
+        <div class="card"><div class="sec-title">Viajes activos — provisión vs real</div><div id="prov-chart"></div></div>
+      </div>
+      <div class="card mt2">
+        <div class="sec-title">Últimos comprobantes</div>
+        <div class="tbl-wrap"><table><thead><tr><th>Fecha</th><th>Proveedor</th><th>Categoría</th><th>Viaje</th><th>Monto</th><th>Img</th></tr></thead><tbody id="last-gastos"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- VIAJES -->
+    <div id="tab-viajes" class="section">
+      <div class="flex flex-sb" style="margin-bottom:12px;">
+        <div class="sec-title" style="margin:0">Viajes / Siniestros</div>
+        <button class="btn btn-primary btn-sm" onclick="openModal('modal-viaje')">+ Nuevo viaje</button>
+      </div>
+      <div id="viajes-alert"></div>
+      <div class="card">
+        <div class="tbl-wrap"><table><thead><tr><th>Código</th><th>Descripción</th><th>Cliente</th><th>Aseguradora</th><th>Inicio</th><th>Estado</th><th>Provisión</th><th>Real</th><th></th></tr></thead><tbody id="viajes-tbody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- CAPTURA -->
+    <div id="tab-captura" class="section">
+      <div class="grid2" style="align-items:start;">
+        <div>
+          <div class="sec-title">Escanear comprobante</div>
+          <div class="scan-zone" id="scan-zone" onclick="triggerScan()">
+            <div id="scan-placeholder">
+              <div style="font-size:32px;margin-bottom:8px;">📷</div>
+              <div style="font-size:14px;font-weight:500;">Toca para fotografiar</div>
+              <div style="font-size:12px;color:var(--txt2);margin-top:4px;">La IA extrae los datos automáticamente</div>
+            </div>
+            <img id="scan-preview-img" class="scan-preview" style="display:none;">
+            <input type="file" id="scan-input" accept="image/*,application/pdf" style="display:none;" onchange="processScan(this)" capture="environment">
+          </div>
+          <div id="scan-progress" style="display:none;margin-top:8px;">
+            <div style="font-size:12px;color:var(--txt2);" id="scan-status">Analizando...</div>
+            <div class="loading-bar"><div class="loading-fill" id="scan-fill"></div></div>
+          </div>
+          <div id="scan-result-box" style="display:none;margin-top:8px;padding:8px 12px;background:var(--ok-l);border:0.5px solid var(--ok-b);border-radius:var(--rad);font-size:12px;color:var(--ok);"></div>
+          <div id="upload-status" style="font-size:11px;color:var(--txt2);margin-top:4px;"></div>
+        </div>
+        <div>
+          <div class="sec-title">Datos del comprobante</div>
+          <div id="captura-alert"></div>
+          <label>Viaje / Siniestro</label>
+          <select id="c-viaje"></select>
+          <div class="grid2">
+            <div>
+              <label>Tipo</label>
+              <select id="c-tipo"><option value="ticket">Ticket</option><option value="factura">Factura</option><option value="nota">Nota</option><option value="otro">Otro</option></select>
+            </div>
+            <div>
+              <label>Categoría</label>
+              <select id="c-cat"><option value="hospedaje">Hospedaje</option><option value="transporte">Transporte</option><option value="viaticos">Viáticos</option><option value="honorarios">Honorarios</option><option value="otros">Otros</option></select>
+            </div>
+          </div>
+          <div class="grid2">
+            <div><label>Proveedor</label><input type="text" id="c-proveedor" placeholder="Nombre"></div>
+            <div><label>RFC</label><input type="text" id="c-rfc" placeholder="RFC"></div>
+          </div>
+          <div class="grid2">
+            <div><label>Monto</label><input type="number" id="c-monto" placeholder="0.00" step="0.01" inputmode="decimal"></div>
+            <div><label>Moneda</label><select id="c-moneda"><option>MXN</option><option>USD</option><option>EUR</option></select></div>
+          </div>
+          <div class="grid2">
+            <div><label>Fecha</label><input type="date" id="c-fecha"></div>
+            <div><label>Folio</label><input type="text" id="c-folio" placeholder="Núm. folio"></div>
+          </div>
+          <label>Notas</label>
+          <textarea id="c-notas" placeholder="Descripción adicional..."></textarea>
+          <div class="flex flex-end mt">
+            <button class="btn btn-sm" onclick="clearForm()">Limpiar</button>
+            <button class="btn btn-primary" onclick="guardarGasto()">Guardar gasto</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GASTOS -->
+    <div id="tab-gastos" class="section">
+      <div class="flex flex-sb" style="margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <div class="sec-title" style="margin:0">Todos los gastos</div>
+        <div class="flex" style="flex-wrap:wrap;gap:6px;">
+          <select id="filtro-viaje" style="font-size:12px;" onchange="renderGastos()"><option value="">Todos los viajes</option></select>
+          <select id="filtro-cat" style="font-size:12px;" onchange="renderGastos()">
+            <option value="">Todas las categorías</option>
+            <option value="hospedaje">Hospedaje</option>
+            <option value="transporte">Transporte</option>
+            <option value="viaticos">Viáticos</option>
+            <option value="honorarios">Honorarios</option>
+            <option value="otros">Otros</option>
+          </select>
+        </div>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap"><table><thead><tr><th>Fecha</th><th>Proveedor</th><th>Tipo</th><th>Cat.</th><th>Viaje</th><th>Monto</th><th>Mon.</th><th>Folio</th><th>Img</th><th></th></tr></thead><tbody id="gastos-tbody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- REPORTES -->
+    <div id="tab-reportes" class="section">
+      <div class="grid2" style="margin-bottom:14px;align-items:start;">
+        <div class="card">
+          <div class="sec-title">Por viaje</div>
+          <label>Seleccionar viaje</label>
+          <select id="rep-viaje" onchange="renderReporteViaje()"></select>
+          <div id="rep-viaje-content" style="margin-top:12px;"></div>
+        </div>
+        <div class="card">
+          <div class="sec-title">Por período</div>
+          <div class="grid2">
+            <div><label>Desde</label><input type="date" id="rep-desde" onchange="renderReportePeriodo()"></div>
+            <div><label>Hasta</label><input type="date" id="rep-hasta" onchange="renderReportePeriodo()"></div>
+          </div>
+          <div id="rep-periodo-content" style="margin-top:12px;"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="sec-title">Por aseguradora / cliente</div>
+        <div id="rep-aseg-content"></div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main-app -->
+
+<!-- MODALS -->
+<div class="modal-bg" id="modal-viaje">
+  <div class="modal">
+    <div class="modal-title">Nuevo viaje / siniestro</div>
+    <label>Código del siniestro</label><input type="text" id="v-codigo" placeholder="SIN-2025-001">
+    <label>Descripción</label><input type="text" id="v-desc" placeholder="Descripción del siniestro">
+    <div class="grid2">
+      <div><label>Cliente</label><input type="text" id="v-cliente"></div>
+      <div><label>Aseguradora</label><input type="text" id="v-aseg"></div>
+    </div>
+    <div class="grid2">
+      <div><label>Fecha inicio</label><input type="date" id="v-fecha-ini"></div>
+      <div><label>Destino</label><input type="text" id="v-destino"></div>
+    </div>
+    <hr class="divider">
+    <div class="sec-title">Provisiones estimadas (MXN)</div>
+    <div class="grid2">
+      <div><label>Hospedaje</label><input type="number" id="prov-hosp" placeholder="0.00" inputmode="decimal"></div>
+      <div><label>Transporte</label><input type="number" id="prov-trans" placeholder="0.00" inputmode="decimal"></div>
+      <div><label>Viáticos</label><input type="number" id="prov-viat" placeholder="0.00" inputmode="decimal"></div>
+      <div><label>Honorarios</label><input type="number" id="prov-hon" placeholder="0.00" inputmode="decimal"></div>
+      <div><label>Otros</label><input type="number" id="prov-otros" placeholder="0.00" inputmode="decimal"></div>
+    </div>
+    <div class="flex flex-end mt">
+      <button class="btn btn-sm" onclick="closeModal('modal-viaje')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="guardarViaje()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-prov">
+  <div class="modal">
+    <div class="modal-title" id="modal-prov-title">Provisiones</div>
+    <div id="modal-prov-body"></div>
+    <div class="flex flex-end mt"><button class="btn btn-sm" onclick="closeModal('modal-prov')">Cerrar</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-img">
+  <div class="modal">
+    <div class="modal-title">Comprobante</div>
+    <img id="modal-img-src" class="img-modal-img" alt="Comprobante">
+    <div class="flex flex-end mt"><button class="btn btn-sm" onclick="closeModal('modal-img')">Cerrar</button></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+const SURL='https://lxtieqaldwcntxaqklww.supabase.co';
+const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4dGllcWFsZHdjbnR4YXFrbHd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0NTk3NjcsImV4cCI6MjA4OTAzNTc2N30.-OvmJm4j70xWq-kz8X1OIoYsEh7KvCIQGqAjiLGaz-g';
+let db,user,viajes=[],gastos=[],provisiones=[];
+let pendingFile=null,pendingMime=null;
+window._authMode='login';
+
+window.addEventListener('load',()=>{
+  db=window.supabase.createClient(SURL,SKEY);
+  document.getElementById('c-fecha').value=today();
+  const d=new Date(); d.setDate(1);
+  document.getElementById('rep-desde').value=d.toISOString().slice(0,10);
+  document.getElementById('rep-hasta').value=today();
+  db.auth.onAuthStateChange((_,session)=>{
+    user=session?.user||null;
+    if(user){showApp();loadAll();}else{showAuthScreen();}
+  });
+});
+
+const today=()=>new Date().toISOString().slice(0,10);
+const fmt=(n,m='MXN')=>new Intl.NumberFormat('es-MX',{style:'currency',currency:m==='USD'?'USD':m==='EUR'?'EUR':'MXN',minimumFractionDigits:2}).format(n||0);
+
+function setAuthMode(m){
+  window._authMode=m;
+  document.querySelectorAll('.auth-tab').forEach((b,i)=>b.classList.toggle('active',(m==='login'&&i===0)||(m==='register'&&i===1)));
+  document.getElementById('auth-name-wrap').style.display=m==='register'?'block':'none';
+  document.getElementById('auth-btn').textContent=m==='login'?'Entrar':'Registrarse';
+}
+
+async function doAuth(){
+  const email=document.getElementById('auth-email').value.trim();
+  const pass=document.getElementById('auth-pass').value;
+  if(!email||!pass){showAuthAlert('Completa todos los campos.','err');return;}
+  document.getElementById('auth-loading').style.display='block';
+  animFill('auth-fill',80,2000);
+  let res;
+  if(window._authMode==='register'){
+    res=await db.auth.signUp({email,password:pass});
+    if(!res.error&&res.data.user){
+      const name=document.getElementById('auth-name').value||email;
+      await db.from('perfiles').upsert({id:res.data.user.id,nombre:name});
+    }
+  }else{
+    res=await db.auth.signInWithPassword({email,password:pass});
+  }
+  document.getElementById('auth-loading').style.display='none';
+  document.getElementById('auth-fill').style.width='0%';
+  if(res.error){showAuthAlert(res.error.message,'err');}
+  else if(window._authMode==='register'&&res.data.user&&!res.data.session){
+    showAuthAlert('Revisa tu correo para confirmar la cuenta, luego inicia sesión.','info');
+  }
+}
+
+function showAuthScreen(){
+  document.getElementById('auth-screen').style.display='flex';
+  document.getElementById('main-app').style.display='none';
+}
+function showApp(){
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('main-app').style.display='flex';
+  const em=user.email||'';
+  document.getElementById('user-avatar').textContent=(em[0]||'U').toUpperCase();
+}
+async function doLogout(){
+  await db.auth.signOut();
+  viajes=[];gastos=[];provisiones=[];
+}
+function showAuthAlert(msg,type){
+  document.getElementById('auth-alert').innerHTML=`<div class="alert alert-${type==='err'?'err':'info'}" style="margin-top:10px;">${msg}</div>`;
+}
+
+async function loadAll(){
+  if(!db||!user)return;
+  const [v,g,p]=await Promise.all([
+    db.from('viajes').select('*').order('created_at',{ascending:false}),
+    db.from('gastos').select('*').order('fecha',{ascending:false}),
+    db.from('provisiones').select('*')
+  ]);
+  viajes=v.data||[];gastos=g.data||[];provisiones=p.data||[];
+  renderAll();
+}
+
+function renderAll(){
+  renderDashboard();renderViajesTable();renderGastos();populateSelects();renderReportes();
+}
+
+function renderDashboard(){
+  const tG=gastos.reduce((s,g)=>s+(+g.monto||0),0);
+  const tP=provisiones.reduce((s,p)=>s+(+p.monto_estimado||0),0);
+  const vA=viajes.filter(v=>v.estado==='activo').length;
+  const diff=tP-tG;
+  document.getElementById('kpis').innerHTML=`
+    <div class="card"><div class="card-title">Gasto total</div><div class="card-value">${fmt(tG)}</div><div class="card-sub">${gastos.length} comprobantes</div></div>
+    <div class="card"><div class="card-title">Provisiones</div><div class="card-value">${fmt(tP)}</div><div class="card-sub">estimado global</div></div>
+    <div class="card"><div class="card-title">Diferencial</div><div class="card-value ${diff>=0?'pos':'neg'}">${fmt(diff)}</div><div class="card-sub">${diff>=0?'disponible':'excedido'}</div></div>
+    <div class="card"><div class="card-title">Viajes activos</div><div class="card-value">${vA}</div><div class="card-sub">de ${viajes.length} total</div></div>`;
+  const cats=['hospedaje','transporte','viaticos','honorarios','otros'];
+  const maxC=Math.max(...cats.map(c=>gastos.filter(g=>g.categoria===c).reduce((s,g)=>s+(+g.monto||0),0)),1);
+  document.getElementById('cat-chart').innerHTML=cats.map(c=>{
+    const t=gastos.filter(g=>g.categoria===c).reduce((s,g)=>s+(+g.monto||0),0);
+    return `<div class="bar-row"><div class="bar-label">${c}</div><div class="pbar-wrap"><div class="pbar" style="width:${(t/maxC*100).toFixed(1)}%"></div></div><div class="bar-amt">${fmt(t)}</div></div>`;
+  }).join('');
+  const vAct=viajes.filter(v=>v.estado==='activo').slice(0,5);
+  document.getElementById('prov-chart').innerHTML=vAct.length?vAct.map(v=>{
+    const prov=provisiones.filter(p=>p.viaje_id===v.id).reduce((s,p)=>s+(+p.monto_estimado||0),0);
+    const real=gastos.filter(g=>g.viaje_id===v.id).reduce((s,g)=>s+(+g.monto||0),0);
+    const pct=prov>0?Math.min((real/prov)*100,100).toFixed(0):0;
+    const over=real>prov;
+    return `<div style="margin-bottom:8px;"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--txt2);margin-bottom:3px;"><span>${v.codigo}</span><span style="color:${over?'var(--err)':'var(--ok)'}">${fmt(real)}/${fmt(prov)}</span></div><div class="pbar-wrap"><div class="pbar" style="width:${pct}%;background:${over?'var(--err)':'var(--acc)'}"></div></div></div>`;
+  }).join(''):'<div style="font-size:12px;color:var(--txt2);">Sin viajes activos</div>';
+  document.getElementById('last-gastos').innerHTML=gastos.slice(0,5).map(g=>{
+    const v=viajes.find(x=>x.id===g.viaje_id);
+    const imgBtn=g.imagen_path?`<div class="thumb-wrap" onclick="viewImg('${g.imagen_path}')"><img src="" data-path="${g.imagen_path}" onload="this.removeAttribute('data-loaded')" alt="img"></div>`:'—';
+    return `<tr><td>${g.fecha}</td><td>${g.proveedor||'—'}</td><td><span class="tag tag-cat">${g.categoria||'—'}</span></td><td>${v?v.codigo:'—'}</td><td>${fmt(g.monto,g.moneda)}</td><td>${imgBtn}</td></tr>`;
+  }).join('');
+  loadThumbs();
+}
+
+async function loadThumbs(){
+  const imgs=document.querySelectorAll('img[data-path]');
+  for(const img of imgs){
+    const path=img.dataset.path;
+    if(!path) continue;
+    const {data}=await db.storage.from('comprobantes').createSignedUrl(path,3600);
+    if(data?.signedUrl) img.src=data.signedUrl;
+  }
+}
+
+function renderViajesTable(){
+  document.getElementById('viajes-tbody').innerHTML=viajes.map(v=>{
+    const prov=provisiones.filter(p=>p.viaje_id===v.id).reduce((s,p)=>s+(+p.monto_estimado||0),0);
+    const real=gastos.filter(g=>g.viaje_id===v.id).reduce((s,g)=>s+(+g.monto||0),0);
+    return `<tr><td><strong>${v.codigo}</strong></td><td>${v.descripcion||'—'}</td><td>${v.cliente||'—'}</td><td>${v.aseguradora||'—'}</td><td>${v.fecha_inicio}</td><td><span class="tag tag-${v.estado}">${v.estado}</span></td><td>${fmt(prov)}</td><td style="color:${real>prov?'var(--err)':'inherit'}">${fmt(real)}</td><td><button class="btn btn-sm" onclick="showProv('${v.id}')">Prov.</button></td></tr>`;
+  }).join('');
+}
+
+function renderGastos(){
+  const fv=document.getElementById('filtro-viaje')?.value||'';
+  const fc=document.getElementById('filtro-cat')?.value||'';
+  const f=gastos.filter(g=>(fv?g.viaje_id===fv:true)&&(fc?g.categoria===fc:true));
+  document.getElementById('gastos-tbody').innerHTML=f.map(g=>{
+    const v=viajes.find(x=>x.id===g.viaje_id);
+    const imgBtn=g.imagen_path?`<div class="thumb-wrap" onclick="viewImg('${g.imagen_path}')"><img src="" data-path="${g.imagen_path}" alt="img"></div>`:'—';
+    return `<tr><td>${g.fecha}</td><td>${g.proveedor||'—'}</td><td>${g.tipo_comprobante||'—'}</td><td><span class="tag tag-cat">${g.categoria||'—'}</span></td><td>${v?v.codigo:'—'}</td><td><strong>${fmt(g.monto,g.moneda)}</strong></td><td>${g.moneda}</td><td>${g.numero_folio||'—'}</td><td>${imgBtn}</td><td><button class="btn btn-sm btn-danger" onclick="delGasto('${g.id}','${g.imagen_path||''}')">✕</button></td></tr>`;
+  }).join('')||'<tr><td colspan="10" style="text-align:center;color:var(--txt2);padding:20px;">Sin registros</td></tr>';
+  loadThumbs();
+}
+
+function populateSelects(){
+  const base='<option value="">— Sin viaje —</option>'+viajes.map(v=>`<option value="${v.id}">${v.codigo}</option>`).join('');
+  const filt='<option value="">Todos los viajes</option>'+viajes.map(v=>`<option value="${v.id}">${v.codigo}</option>`).join('');
+  const el=id=>document.getElementById(id);
+  if(el('c-viaje'))el('c-viaje').innerHTML=base;
+  if(el('filtro-viaje'))el('filtro-viaje').innerHTML=filt;
+  if(el('rep-viaje'))el('rep-viaje').innerHTML=base;
+}
+
+function renderReportes(){renderReporteViaje();renderReportePeriodo();renderReporteAseg();}
+
+function renderReporteViaje(){
+  const vid=document.getElementById('rep-viaje')?.value;
+  const el=document.getElementById('rep-viaje-content');
+  if(!vid||!el){if(el)el.innerHTML='';return;}
+  const gs=gastos.filter(g=>g.viaje_id===vid);
+  const ps=provisiones.filter(p=>p.viaje_id===vid);
+  const cats=['hospedaje','transporte','viaticos','honorarios','otros'];
+  const tP=ps.reduce((s,p)=>s+(+p.monto_estimado||0),0);
+  const tR=gs.reduce((s,g)=>s+(+g.monto||0),0);
+  el.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Categoría</th><th>Provisión</th><th>Real</th><th>Diferencial</th></tr></thead><tbody>${cats.map(c=>{
+    const prov=ps.filter(p=>p.categoria===c).reduce((s,p)=>s+(+p.monto_estimado||0),0);
+    const real=gs.filter(g=>g.categoria===c).reduce((s,g)=>s+(+g.monto||0),0);
+    const d=prov-real;
+    return `<tr><td>${c}</td><td>${fmt(prov)}</td><td>${fmt(real)}</td><td class="${d>=0?'pos':'neg'}">${fmt(d)}</td></tr>`;
+  }).join('')}<tr style="font-weight:600;border-top:1px solid var(--bdr)"><td>Total</td><td>${fmt(tP)}</td><td>${fmt(tR)}</td><td class="${(tP-tR)>=0?'pos':'neg'}">${fmt(tP-tR)}</td></tr></tbody></table></div>`;
+}
+
+function renderReportePeriodo(){
+  const desde=document.getElementById('rep-desde')?.value;
+  const hasta=document.getElementById('rep-hasta')?.value;
+  const el=document.getElementById('rep-periodo-content');
+  if(!el)return;
+  const gs=gastos.filter(g=>(!desde||g.fecha>=desde)&&(!hasta||g.fecha<=hasta));
+  if(!gs.length){el.innerHTML='<div style="font-size:12px;color:var(--txt2);">Sin datos en el período</div>';return;}
+  const total=gs.reduce((s,g)=>s+(+g.monto||0),0);
+  el.innerHTML=`<div style="font-size:13px;font-weight:500;margin-bottom:8px;">${fmt(total)} — ${gs.length} comprobantes</div>`+
+  ['hospedaje','transporte','viaticos','honorarios','otros'].map(c=>{
+    const t=gs.filter(g=>g.categoria===c).reduce((s,g)=>s+(+g.monto||0),0);
+    if(!t)return '';
+    return `<div class="bar-row"><div class="bar-label">${c}</div><div class="pbar-wrap"><div class="pbar" style="width:${(t/total*100).toFixed(0)}%"></div></div><div class="bar-amt">${fmt(t)}</div></div>`;
+  }).join('');
+}
+
+function renderReporteAseg(){
+  const el=document.getElementById('rep-aseg-content');
+  if(!el)return;
+  const grp={};
+  viajes.forEach(v=>{
+    const k=v.aseguradora||'Sin aseguradora';
+    if(!grp[k])grp[k]={aseg:k,total:0,viajes:0,clientes:new Set()};
+    grp[k].total+=gastos.filter(g=>g.viaje_id===v.id).reduce((s,g)=>s+(+g.monto||0),0);
+    grp[k].viajes++;
+    if(v.cliente)grp[k].clientes.add(v.cliente);
+  });
+  const rows=Object.values(grp);
+  el.innerHTML=rows.length?`<div class="tbl-wrap"><table><thead><tr><th>Aseguradora</th><th>Viajes</th><th>Clientes</th><th>Gasto total</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.aseg}</td><td>${r.viajes}</td><td>${[...r.clientes].join(', ')||'—'}</td><td><strong>${fmt(r.total)}</strong></td></tr>`).join('')}</tbody></table></div>`:'<div style="font-size:12px;color:var(--txt2);">Sin datos</div>';
+}
+
+function showTab(t,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(t==='reportes')renderReportes();
+}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+async function guardarViaje(){
+  const codigo=document.getElementById('v-codigo').value.trim();
+  if(!codigo)return;
+  const fi=document.getElementById('v-fecha-ini').value||today();
+  const{data,error}=await db.from('viajes').insert({
+    codigo,descripcion:document.getElementById('v-desc').value,
+    cliente:document.getElementById('v-cliente').value,
+    aseguradora:document.getElementById('v-aseg').value,
+    fecha_inicio:fi,destino:document.getElementById('v-destino').value,
+    user_id:user.id
+  }).select().single();
+  if(error||!data)return;
+  const cats=['hosp','trans','viat','hon','otros'],cN=['hospedaje','transporte','viaticos','honorarios','otros'];
+  const pr=cats.map((c,i)=>({viaje_id:data.id,categoria:cN[i],monto_estimado:parseFloat(document.getElementById('prov-'+c).value)||0,moneda:'MXN',user_id:user.id})).filter(p=>p.monto_estimado>0);
+  if(pr.length)await db.from('provisiones').insert(pr);
+  closeModal('modal-viaje');
+  showAlert('viajes-alert','Viaje guardado correctamente.','ok');
+  await loadAll();
+}
+
+async function guardarGasto(){
+  const monto=parseFloat(document.getElementById('c-monto').value)||0;
+  if(!monto){showAlert('captura-alert','Ingresa un monto válido.','err');return;}
+  const fecha=document.getElementById('c-fecha').value||today();
+  let imagenPath=null;
+  if(pendingFile){
+    document.getElementById('upload-status').textContent='Subiendo imagen...';
+    imagenPath=await uploadFile(pendingFile);
+    document.getElementById('upload-status').textContent=imagenPath?'Imagen guardada.':'Error al subir imagen.';
+  }
+  const{error}=await db.from('gastos').insert({
+    viaje_id:document.getElementById('c-viaje').value||null,
+    tipo_comprobante:document.getElementById('c-tipo').value,
+    proveedor:document.getElementById('c-proveedor').value||null,
+    rfc_proveedor:document.getElementById('c-rfc').value||null,
+    categoria:document.getElementById('c-cat').value,
+    monto,moneda:document.getElementById('c-moneda').value,
+    fecha,numero_folio:document.getElementById('c-folio').value||null,
+    notas:document.getElementById('c-notas').value||null,
+    imagen_path:imagenPath,
+    metodo_captura:pendingFile?'mixto':'manual',
+    user_id:user.id
+  });
+  if(!error){
+    showAlert('captura-alert','Gasto guardado correctamente.','ok');
+    clearForm();await loadAll();
+  }else{
+    showAlert('captura-alert',error.message,'err');
+  }
+}
+
+async function delGasto(id,path){
+  if(path)await db.storage.from('comprobantes').remove([path]);
+  await db.from('gastos').delete().eq('id',id);
+  await loadAll();
+}
+
+function clearForm(){
+  ['c-monto','c-proveedor','c-rfc','c-folio','c-notas'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('c-fecha').value=today();
+  pendingFile=null;pendingMime=null;
+  document.getElementById('scan-placeholder').style.display='block';
+  document.getElementById('scan-preview-img').style.display='none';
+  document.getElementById('scan-result-box').style.display='none';
+  document.getElementById('scan-progress').style.display='none';
+  document.getElementById('upload-status').textContent='';
+}
+
+async function uploadFile(file){
+  const ext=file.name.split('.').pop()||'jpg';
+  const path=`${user.id}/${Date.now()}.${ext}`;
+  const{data,error}=await db.storage.from('comprobantes').upload(path,file,{contentType:file.type,upsert:false});
+  return error?null:data.path;
+}
+
+async function viewImg(path){
+  const{data}=await db.storage.from('comprobantes').createSignedUrl(path,600);
+  if(data?.signedUrl){
+    document.getElementById('modal-img-src').src=data.signedUrl;
+    openModal('modal-img');
+  }
+}
+
+function showProv(vid){
+  const v=viajes.find(x=>x.id===vid);
+  const ps=provisiones.filter(p=>p.viaje_id===vid);
+  const gs=gastos.filter(g=>g.viaje_id===vid);
+  const cats=['hospedaje','transporte','viaticos','honorarios','otros'];
+  document.getElementById('modal-prov-title').textContent=`Provisiones: ${v?.codigo||''}`;
+  const tP=ps.reduce((s,p)=>s+(+p.monto_estimado||0),0);
+  const tR=gs.reduce((s,g)=>s+(+g.monto||0),0);
+  document.getElementById('modal-prov-body').innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Categoría</th><th>Provisión</th><th>Real</th><th>Diferencial</th></tr></thead><tbody>${cats.map(c=>{
+    const prov=ps.filter(p=>p.categoria===c).reduce((s,p)=>s+(+p.monto_estimado||0),0);
+    const real=gs.filter(g=>g.categoria===c).reduce((s,g)=>s+(+g.monto||0),0);
+    const d=prov-real;
+    return `<tr><td>${c}</td><td>${fmt(prov)}</td><td>${fmt(real)}</td><td class="${d>=0?'pos':'neg'}">${fmt(d)}</td></tr>`;
+  }).join('')}<tr style="font-weight:600;"><td>Total</td><td>${fmt(tP)}</td><td>${fmt(tR)}</td><td class="${(tP-tR)>=0?'pos':'neg'}">${fmt(tP-tR)}</td></tr></tbody></table></div>`;
+  openModal('modal-prov');
+}
+
+function triggerScan(){document.getElementById('scan-input').click();}
+
+async function processScan(input){
+  const file=input.files[0];
+  if(!file)return;
+  pendingFile=file;pendingMime=file.type||'image/jpeg';
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    const b64=e.target.result.split(',')[1];
+    document.getElementById('scan-preview-img').src=e.target.result;
+    document.getElementById('scan-preview-img').style.display='block';
+    document.getElementById('scan-placeholder').style.display='none';
+    document.getElementById('scan-progress').style.display='block';
+    document.getElementById('scan-result-box').style.display='none';
+    document.getElementById('scan-status').textContent='Extrayendo datos con IA...';
+    animFill('scan-fill',85,3500);
+    try{
+      const resp=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          model:'claude-sonnet-4-20250514',max_tokens:1000,
+          messages:[{role:'user',content:[
+            {type:'image',source:{type:'base64',media_type:pendingMime,data:b64}},
+            {type:'text',text:'Eres un extractor de datos de comprobantes fiscales mexicanos. Analiza esta imagen y responde SOLO con JSON válido sin markdown con estos campos: {"proveedor":"string","rfc":"string|null","monto":number,"moneda":"MXN|USD|EUR","fecha":"YYYY-MM-DD|null","folio":"string|null","tipo":"ticket|factura|nota|otro","categoria_sugerida":"hospedaje|transporte|viaticos|honorarios|otros","descripcion":"string"}'}
+          ]}]
+        })
+      });
+      const data=await resp.json();
+      document.getElementById('scan-fill').style.width='100%';
+      const text=data.content?.find(c=>c.type==='text')?.text||'{}';
+      const parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
+      document.getElementById('scan-status').textContent='Datos extraídos';
+      document.getElementById('scan-result-box').style.display='block';
+      document.getElementById('scan-result-box').textContent=`${parsed.proveedor||'?'} · ${parsed.monto||'?'} ${parsed.moneda||'MXN'} · ${parsed.fecha||'—'}`;
+      if(parsed.proveedor)document.getElementById('c-proveedor').value=parsed.proveedor;
+      if(parsed.rfc)document.getElementById('c-rfc').value=parsed.rfc;
+      if(parsed.monto)document.getElementById('c-monto').value=parsed.monto;
+      if(parsed.moneda)document.getElementById('c-moneda').value=parsed.moneda;
+      if(parsed.fecha)document.getElementById('c-fecha').value=parsed.fecha;
+      if(parsed.folio)document.getElementById('c-folio').value=parsed.folio;
+      if(parsed.tipo)document.getElementById('c-tipo').value=parsed.tipo;
+      if(parsed.categoria_sugerida)document.getElementById('c-cat').value=parsed.categoria_sugerida;
+      if(parsed.descripcion)document.getElementById('c-notas').value=parsed.descripcion;
+    }catch(e){
+      document.getElementById('scan-status').textContent='Error al procesar. Ingresa manualmente.';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function showAlert(containerId,msg,type){
+  const el=document.getElementById(containerId);
+  if(!el)return;
+  el.innerHTML=`<div class="alert alert-${type}">${msg}</div>`;
+  setTimeout(()=>{el.innerHTML='';},4000);
+}
+
+function animFill(id,target,dur){
+  const el=document.getElementById(id);if(!el)return;
+  el.style.width='0%';
+  const steps=60,inc=target/steps,ms=dur/steps;
+  let curr=0;
+  const t=setInterval(()=>{curr=Math.min(curr+inc,target);el.style.width=curr+'%';if(curr>=target)clearInterval(t);},ms);
+}
+</script>
+</body>
+</html>
