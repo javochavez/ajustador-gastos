@@ -251,16 +251,31 @@
             </div>
             <div>
               <label>Categoría</label>
-              <select id="c-cat"><option value="hospedaje">Hospedaje</option><option value="transporte">Transporte</option><option value="viaticos">Viáticos</option><option value="honorarios">Honorarios</option><option value="otros">Otros</option></select>
+              <select id="c-cat"><option value="hospedaje">Hospedaje</option>
+                <option value="transporte">Transporte</option>
+                <option value="avion">Avión</option>
+                <option value="taxi">Taxi</option>
+                <option value="autobus">Autobús</option>
+                <option value="peajes">Peajes</option>
+                <option value="kilometraje">Kilometraje</option>
+                <option value="viaticos">Viáticos</option>
+                <option value="propina">Propina</option>
+                <option value="honorarios">Honorarios</option>
+                <option value="otros">Otros</option>
+              </select>
             </div>
           </div>
           <div class="grid2">
-            <div><label>Proveedor</label><input type="text" id="c-proveedor" placeholder="Nombre"></div>
-            <div><label>RFC</label><input type="text" id="c-rfc" placeholder="RFC"></div>
+            <div><label>Proveedor</label><input type="text" id="c-proveedor" placeholder="Nombre del proveedor"></div>
+            <div><label>RFC proveedor</label><input type="text" id="c-rfc" placeholder="RFC"></div>
           </div>
           <div class="grid2">
-            <div><label>Monto</label><input type="number" id="c-monto" placeholder="0.00" step="0.01" inputmode="decimal"></div>
+            <div><label>Monto (sin IVA)</label><input type="number" id="c-monto" placeholder="0.00" step="0.01" inputmode="decimal" oninput="calcIva()"></div>
             <div><label>Moneda</label><select id="c-moneda"><option>MXN</option><option>USD</option><option>EUR</option></select></div>
+          </div>
+          <div class="grid2">
+            <div><label>IVA</label><input type="number" id="c-iva" placeholder="0.00" step="0.01" inputmode="decimal" oninput="calcTotal()"></div>
+            <div><label>Total con IVA</label><input type="number" id="c-total" placeholder="0.00" step="0.01" inputmode="decimal" style="background:var(--bg2);" readonly></div>
           </div>
           <div class="grid2">
             <div><label>Fecha</label><input type="date" id="c-fecha"></div>
@@ -286,14 +301,20 @@
             <option value="">Todas las categorías</option>
             <option value="hospedaje">Hospedaje</option>
             <option value="transporte">Transporte</option>
+            <option value="avion">Avión</option>
+            <option value="taxi">Taxi</option>
+            <option value="autobus">Autobús</option>
+            <option value="peajes">Peajes</option>
+            <option value="kilometraje">Kilometraje</option>
             <option value="viaticos">Viáticos</option>
+            <option value="propina">Propina</option>
             <option value="honorarios">Honorarios</option>
             <option value="otros">Otros</option>
           </select>
         </div>
       </div>
       <div class="card">
-        <div class="tbl-wrap"><table><thead><tr><th>Fecha</th><th>Proveedor</th><th>Tipo</th><th>Cat.</th><th>Viaje</th><th>Monto</th><th>Mon.</th><th>Folio</th><th>Img</th><th></th></tr></thead><tbody id="gastos-tbody"></tbody></table></div>
+        <div class="tbl-wrap"><table><thead><tr><th>Fecha</th><th>Proveedor</th><th>Tipo</th><th>Cat.</th><th>Viaje</th><th>Monto</th><th>IVA</th><th>Mon.</th><th>Folio</th><th>Img</th><th></th></tr></thead><tbody id="gastos-tbody"></tbody></table></div>
       </div>
     </div>
 
@@ -514,7 +535,7 @@ function renderGastos(){
   document.getElementById('gastos-tbody').innerHTML=f.map(g=>{
     const v=viajes.find(x=>x.id===g.viaje_id);
     const imgBtn=g.imagen_path?`<div class="thumb-wrap" onclick="viewImg('${g.imagen_path}')"><img src="" data-path="${g.imagen_path}" alt="img"></div>`:'—';
-    return `<tr><td>${g.fecha}</td><td>${g.proveedor||'—'}</td><td>${g.tipo_comprobante||'—'}</td><td><span class="tag tag-cat">${g.categoria||'—'}</span></td><td>${v?v.codigo:'—'}</td><td><strong>${fmt(g.monto,g.moneda)}</strong></td><td>${g.moneda}</td><td>${g.numero_folio||'—'}</td><td>${imgBtn}</td><td><button class="btn btn-sm btn-danger" onclick="delGasto('${g.id}','${g.imagen_path||''}')">✕</button></td></tr>`;
+    return `<tr><td>${g.fecha}</td><td>${g.proveedor||'—'}</td><td>${g.tipo_comprobante||'—'}</td><td><span class="tag tag-cat">${g.categoria||'—'}</span></td><td>${v?v.codigo:'—'}</td><td><strong>${fmt(g.monto,g.moneda)}</strong></td><td>${g.iva>0?fmt(g.iva,g.moneda):'—'}</td><td>${g.moneda}</td><td>${g.numero_folio||'—'}</td><td>${imgBtn}</td><td><button class="btn btn-sm btn-danger" onclick="delGasto('${g.id}','${g.imagen_path||''}')">✕</button></td></tr>`;
   }).join('')||'<tr><td colspan="10" style="text-align:center;color:var(--txt2);padding:20px;">Sin registros</td></tr>';
   loadThumbs();
 }
@@ -624,7 +645,7 @@ async function guardarGasto(){
     proveedor:document.getElementById('c-proveedor').value||null,
     rfc_proveedor:document.getElementById('c-rfc').value||null,
     categoria:document.getElementById('c-cat').value,
-    monto,moneda:document.getElementById('c-moneda').value,
+    monto,iva:parseFloat(document.getElementById('c-iva').value)||0,moneda:document.getElementById('c-moneda').value,
     fecha,numero_folio:document.getElementById('c-folio').value||null,
     notas:document.getElementById('c-notas').value||null,
     imagen_path:imagenPath,
@@ -646,7 +667,7 @@ async function delGasto(id,path){
 }
 
 function clearForm(){
-  ['c-monto','c-proveedor','c-rfc','c-folio','c-notas'].forEach(id=>document.getElementById(id).value='');
+  ['c-monto','c-iva','c-total','c-proveedor','c-rfc','c-folio','c-notas'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('c-fecha').value=today();
   pendingFile=null;pendingMime=null;
   document.getElementById('scan-placeholder').style.display='block';
@@ -711,7 +732,7 @@ async function processScan(input){
           model:'claude-sonnet-4-20250514',max_tokens:1000,
           messages:[{role:'user',content:[
             {type:'image',source:{type:'base64',media_type:pendingMime,data:b64}},
-            {type:'text',text:'Eres un extractor de datos de comprobantes fiscales mexicanos. Analiza esta imagen y responde SOLO con JSON válido sin markdown con estos campos: {"proveedor":"string","rfc":"string|null","monto":number,"moneda":"MXN|USD|EUR","fecha":"YYYY-MM-DD|null","folio":"string|null","tipo":"ticket|factura|nota|otro","categoria_sugerida":"hospedaje|transporte|viaticos|honorarios|otros","descripcion":"string"}'}
+            {type:'text',text:'Eres un extractor de datos de comprobantes fiscales mexicanos. Analiza esta imagen y responde SOLO con JSON válido sin markdown con estos campos: {"proveedor":"string","rfc":"string|null","monto":number,"moneda":"MXN|USD|EUR","fecha":"YYYY-MM-DD|null","folio":"string|null","tipo":"ticket|factura|nota|otro","iva":number|null,"categoria_sugerida":"hospedaje|transporte|avion|taxi|autobus|peajes|kilometraje|viaticos|propina|honorarios|otros","descripcion":"string"}'}
           ]}]
         })
       });
@@ -730,6 +751,7 @@ async function processScan(input){
       if(parsed.folio)document.getElementById('c-folio').value=parsed.folio;
       if(parsed.tipo)document.getElementById('c-tipo').value=parsed.tipo;
       if(parsed.categoria_sugerida)document.getElementById('c-cat').value=parsed.categoria_sugerida;
+      if(parsed.iva){document.getElementById('c-iva').value=parsed.iva;calcTotal();}
       if(parsed.descripcion)document.getElementById('c-notas').value=parsed.descripcion;
     }catch(e){
       document.getElementById('scan-status').textContent='Error al procesar. Ingresa manualmente.';
@@ -738,6 +760,17 @@ async function processScan(input){
   reader.readAsDataURL(file);
 }
 
+function calcIva(){
+  const monto=parseFloat(document.getElementById('c-monto').value)||0;
+  const iva=parseFloat((monto*0.16).toFixed(2));
+  document.getElementById('c-iva').value=iva||'';
+  calcTotal();
+}
+function calcTotal(){
+  const monto=parseFloat(document.getElementById('c-monto').value)||0;
+  const iva=parseFloat(document.getElementById('c-iva').value)||0;
+  document.getElementById('c-total').value=(monto+iva).toFixed(2)||'';
+}
 function showAlert(containerId,msg,type){
   const el=document.getElementById(containerId);
   if(!el)return;
