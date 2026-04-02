@@ -4,18 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>AjustadorGastos</title>
-
+ 
   <!-- PWA -->
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#185FA5">
   <meta name="mobile-web-app-capable" content="yes">
-
+ 
   <!-- iOS Safari -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="AjGastos">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
-
+ 
   <!-- Descripción y SEO mínimo -->
   <meta name="description" content="Gestión de comprobantes y provisiones para ajustadores de seguros">
   <style>
@@ -41,7 +41,7 @@
     }
     html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--txt); font-size: 14px; }
     .app { min-height: 100vh; background: var(--bg3); }
-
+ 
     /* AUTH */
     #auth-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
     .auth-box { background: var(--bg); border: 0.5px solid var(--bdr); border-radius: var(--rad-lg); padding: 32px 28px; width: 100%; max-width: 360px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
@@ -51,7 +51,7 @@
     .auth-tabs { display: flex; border: 0.5px solid var(--bdr); border-radius: var(--rad); overflow: hidden; margin-bottom: 18px; }
     .auth-tab { flex: 1; padding: 8px; font-size: 13px; border: none; background: transparent; cursor: pointer; color: var(--txt2); }
     .auth-tab.active { background: var(--acc-l); color: var(--acc); font-weight: 500; }
-
+ 
     /* MAIN LAYOUT */
     #main-app { display: none; flex-direction: column; min-height: 100vh; }
     .topbar { display: flex; align-items: center; justify-content: space-between; padding: 0 16px; height: 52px; background: var(--bg); border-bottom: 0.5px solid var(--bdr); position: sticky; top: 0; z-index: 50; gap: 8px; }
@@ -66,7 +66,7 @@
     .content { flex: 1; padding: 16px; max-width: 1100px; margin: 0 auto; width: 100%; }
     .section { display: none; }
     .section.active { display: block; }
-
+ 
     /* COMPONENTS */
     label { font-size: 12px; color: var(--txt2); display: block; margin-bottom: 4px; margin-top: 10px; }
     input, select, textarea {
@@ -128,18 +128,18 @@
     .bar-amt { font-size: 11px; color: var(--txt2); width: 80px; text-align: right; }
     .loading-bar { height: 3px; background: var(--acc-l); border-radius: 2px; overflow: hidden; margin-top: 6px; }
     .loading-fill { height: 100%; background: var(--acc); width: 0%; transition: width 0.25s; border-radius: 2px; }
-
+ 
     /* SCAN */
     .scan-zone { border: 1.5px dashed var(--bdr2); border-radius: var(--rad-lg); padding: 24px; text-align: center; cursor: pointer; transition: background 0.15s; }
     .scan-zone:hover { background: var(--bg2); }
     .scan-preview { max-width: 100%; max-height: 180px; border-radius: var(--rad); object-fit: contain; }
-
+ 
     /* MODAL */
     .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; align-items: center; justify-content: center; padding: 16px; }
     .modal-bg.open { display: flex; }
     .modal { background: var(--bg); border-radius: var(--rad-lg); border: 0.5px solid var(--bdr); padding: 20px; width: 100%; max-width: 460px; max-height: 88vh; overflow-y: auto; }
     .modal-title { font-size: 15px; font-weight: 600; margin-bottom: 14px; }
-
+ 
     /* THUMB */
     .thumb-wrap { width: 34px; height: 34px; border-radius: var(--rad); overflow: hidden; border: 0.5px solid var(--bdr); cursor: pointer; flex-shrink: 0; }
     .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; }
@@ -148,7 +148,7 @@
 </head>
 <body>
 <div class="app">
-
+ 
 <!-- AUTH -->
 <div id="auth-screen">
   <div class="auth-box">
@@ -173,7 +173,7 @@
     <div id="auth-loading" style="display:none;margin-top:8px;"><div class="loading-bar"><div class="loading-fill" id="auth-fill"></div></div></div>
   </div>
 </div>
-
+ 
 <!-- MAIN APP -->
 <div id="main-app">
   <div class="topbar">
@@ -190,9 +190,9 @@
       <button class="btn btn-sm" onclick="doLogout()">Salir</button>
     </div>
   </div>
-
+ 
   <div class="content">
-
+ 
     <!-- DASHBOARD -->
     <div id="tab-dashboard" class="section active">
       <div id="kpis" class="grid4" style="margin-bottom:14px;"></div>
@@ -205,7 +205,7 @@
         <div class="tbl-wrap"><table><thead><tr><th>Fecha</th><th>Proveedor</th><th>Categoría</th><th>Viaje</th><th>Monto</th><th>Img</th></tr></thead><tbody id="last-gastos"></tbody></table></div>
       </div>
     </div>
-
+ 
     <!-- VIAJES -->
     <div id="tab-viajes" class="section">
       <div class="flex flex-sb" style="margin-bottom:12px;">
@@ -217,7 +217,7 @@
         <div class="tbl-wrap"><table><thead><tr><th>Código</th><th>Descripción</th><th>Cliente</th><th>Aseguradora</th><th>Inicio</th><th>Estado</th><th>Provisión</th><th>Real</th><th></th></tr></thead><tbody id="viajes-tbody"></tbody></table></div>
       </div>
     </div>
-
+ 
     <!-- CAPTURA -->
     <div id="tab-captura" class="section">
       <div class="grid2" style="align-items:start;">
@@ -226,11 +226,11 @@
           <div class="scan-zone" id="scan-zone" onclick="triggerScan()">
             <div id="scan-placeholder">
               <div style="font-size:32px;margin-bottom:8px;">📷</div>
-              <div style="font-size:14px;font-weight:500;">Toca para fotografiar</div>
+              <div style="font-size:14px;font-weight:500;">Fotografiar o elegir imagen</div>
               <div style="font-size:12px;color:var(--txt2);margin-top:4px;">La IA extrae los datos automáticamente</div>
             </div>
             <img id="scan-preview-img" class="scan-preview" style="display:none;">
-            <input type="file" id="scan-input" accept="image/*,application/pdf" style="display:none;" onchange="processScan(this)" capture="environment">
+            <input type="file" id="scan-input" accept="image/*,application/pdf" style="display:none;" onchange="processScan(this)">
           </div>
           <div id="scan-progress" style="display:none;margin-top:8px;">
             <div style="font-size:12px;color:var(--txt2);" id="scan-status">Analizando...</div>
@@ -290,7 +290,7 @@
         </div>
       </div>
     </div>
-
+ 
     <!-- GASTOS -->
     <div id="tab-gastos" class="section">
       <div class="flex flex-sb" style="margin-bottom:12px;flex-wrap:wrap;gap:8px;">
@@ -317,7 +317,7 @@
         <div class="tbl-wrap"><table><thead><tr><th>Fecha</th><th>Proveedor</th><th>Tipo</th><th>Cat.</th><th>Viaje</th><th>Monto</th><th>IVA</th><th>Mon.</th><th>Folio</th><th>Img</th><th></th></tr></thead><tbody id="gastos-tbody"></tbody></table></div>
       </div>
     </div>
-
+ 
     <!-- REPORTES -->
     <div id="tab-reportes" class="section">
       <div class="grid2" style="margin-bottom:14px;align-items:start;">
@@ -341,10 +341,10 @@
         <div id="rep-aseg-content"></div>
       </div>
     </div>
-
+ 
   </div><!-- /content -->
 </div><!-- /main-app -->
-
+ 
 <!-- MODALS -->
 <div class="modal-bg" id="modal-viaje">
   <div class="modal">
@@ -374,7 +374,7 @@
     </div>
   </div>
 </div>
-
+ 
 <div class="modal-bg" id="modal-prov">
   <div class="modal">
     <div class="modal-title" id="modal-prov-title">Provisiones</div>
@@ -382,7 +382,7 @@
     <div class="flex flex-end mt"><button class="btn btn-sm" onclick="closeModal('modal-prov')">Cerrar</button></div>
   </div>
 </div>
-
+ 
 <div class="modal-bg" id="modal-img">
   <div class="modal">
     <div class="modal-title">Comprobante</div>
@@ -390,7 +390,7 @@
     <div class="flex flex-end mt"><button class="btn btn-sm" onclick="closeModal('modal-img')">Cerrar</button></div>
   </div>
 </div>
-
+ 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 const SURL='https://lxtieqaldwcntxaqklww.supabase.co';
@@ -398,7 +398,7 @@ const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 let db,user,viajes=[],gastos=[],provisiones=[];
 let pendingFile=null,pendingMime=null;
 window._authMode='login';
-
+ 
 window.addEventListener('load',()=>{
   db=window.supabase.createClient(SURL,SKEY);
   document.getElementById('c-fecha').value=today();
@@ -410,17 +410,17 @@ window.addEventListener('load',()=>{
     if(user){showApp();loadAll();}else{showAuthScreen();}
   });
 });
-
+ 
 const today=()=>new Date().toISOString().slice(0,10);
 const fmt=(n,m='MXN')=>new Intl.NumberFormat('es-MX',{style:'currency',currency:m==='USD'?'USD':m==='EUR'?'EUR':'MXN',minimumFractionDigits:2}).format(n||0);
-
+ 
 function setAuthMode(m){
   window._authMode=m;
   document.querySelectorAll('.auth-tab').forEach((b,i)=>b.classList.toggle('active',(m==='login'&&i===0)||(m==='register'&&i===1)));
   document.getElementById('auth-name-wrap').style.display=m==='register'?'block':'none';
   document.getElementById('auth-btn').textContent=m==='login'?'Entrar':'Registrarse';
 }
-
+ 
 async function doAuth(){
   const email=document.getElementById('auth-email').value.trim();
   const pass=document.getElementById('auth-pass').value;
@@ -444,7 +444,7 @@ async function doAuth(){
     showAuthAlert('Revisa tu correo para confirmar la cuenta, luego inicia sesión.','info');
   }
 }
-
+ 
 function showAuthScreen(){
   document.getElementById('auth-screen').style.display='flex';
   document.getElementById('main-app').style.display='none';
@@ -462,7 +462,7 @@ async function doLogout(){
 function showAuthAlert(msg,type){
   document.getElementById('auth-alert').innerHTML=`<div class="alert alert-${type==='err'?'err':'info'}" style="margin-top:10px;">${msg}</div>`;
 }
-
+ 
 async function loadAll(){
   if(!db||!user)return;
   const [v,g,p]=await Promise.all([
@@ -473,11 +473,11 @@ async function loadAll(){
   viajes=v.data||[];gastos=g.data||[];provisiones=p.data||[];
   renderAll();
 }
-
+ 
 function renderAll(){
   renderDashboard();renderViajesTable();renderGastos();populateSelects();renderReportes();
 }
-
+ 
 function renderDashboard(){
   const tG=gastos.reduce((s,g)=>s+(+g.monto||0),0);
   const tP=provisiones.reduce((s,p)=>s+(+p.monto_estimado||0),0);
@@ -509,7 +509,7 @@ function renderDashboard(){
   }).join('');
   loadThumbs();
 }
-
+ 
 async function loadThumbs(){
   const imgs=document.querySelectorAll('img[data-path]');
   for(const img of imgs){
@@ -519,7 +519,7 @@ async function loadThumbs(){
     if(data?.signedUrl) img.src=data.signedUrl;
   }
 }
-
+ 
 function renderViajesTable(){
   document.getElementById('viajes-tbody').innerHTML=viajes.map(v=>{
     const prov=provisiones.filter(p=>p.viaje_id===v.id).reduce((s,p)=>s+(+p.monto_estimado||0),0);
@@ -527,7 +527,7 @@ function renderViajesTable(){
     return `<tr><td><strong>${v.codigo}</strong></td><td>${v.descripcion||'—'}</td><td>${v.cliente||'—'}</td><td>${v.aseguradora||'—'}</td><td>${v.fecha_inicio}</td><td><span class="tag tag-${v.estado}">${v.estado}</span></td><td>${fmt(prov)}</td><td style="color:${real>prov?'var(--err)':'inherit'}">${fmt(real)}</td><td><button class="btn btn-sm" onclick="showProv('${v.id}')">Prov.</button></td></tr>`;
   }).join('');
 }
-
+ 
 function renderGastos(){
   const fv=document.getElementById('filtro-viaje')?.value||'';
   const fc=document.getElementById('filtro-cat')?.value||'';
@@ -539,7 +539,7 @@ function renderGastos(){
   }).join('')||'<tr><td colspan="10" style="text-align:center;color:var(--txt2);padding:20px;">Sin registros</td></tr>';
   loadThumbs();
 }
-
+ 
 function populateSelects(){
   const base='<option value="">— Sin viaje —</option>'+viajes.map(v=>`<option value="${v.id}">${v.codigo}</option>`).join('');
   const filt='<option value="">Todos los viajes</option>'+viajes.map(v=>`<option value="${v.id}">${v.codigo}</option>`).join('');
@@ -548,9 +548,9 @@ function populateSelects(){
   if(el('filtro-viaje'))el('filtro-viaje').innerHTML=filt;
   if(el('rep-viaje'))el('rep-viaje').innerHTML=base;
 }
-
+ 
 function renderReportes(){renderReporteViaje();renderReportePeriodo();renderReporteAseg();}
-
+ 
 function renderReporteViaje(){
   const vid=document.getElementById('rep-viaje')?.value;
   const el=document.getElementById('rep-viaje-content');
@@ -567,7 +567,7 @@ function renderReporteViaje(){
     return `<tr><td>${c}</td><td>${fmt(prov)}</td><td>${fmt(real)}</td><td class="${d>=0?'pos':'neg'}">${fmt(d)}</td></tr>`;
   }).join('')}<tr style="font-weight:600;border-top:1px solid var(--bdr)"><td>Total</td><td>${fmt(tP)}</td><td>${fmt(tR)}</td><td class="${(tP-tR)>=0?'pos':'neg'}">${fmt(tP-tR)}</td></tr></tbody></table></div>`;
 }
-
+ 
 function renderReportePeriodo(){
   const desde=document.getElementById('rep-desde')?.value;
   const hasta=document.getElementById('rep-hasta')?.value;
@@ -583,7 +583,7 @@ function renderReportePeriodo(){
     return `<div class="bar-row"><div class="bar-label">${c}</div><div class="pbar-wrap"><div class="pbar" style="width:${(t/total*100).toFixed(0)}%"></div></div><div class="bar-amt">${fmt(t)}</div></div>`;
   }).join('');
 }
-
+ 
 function renderReporteAseg(){
   const el=document.getElementById('rep-aseg-content');
   if(!el)return;
@@ -598,7 +598,7 @@ function renderReporteAseg(){
   const rows=Object.values(grp);
   el.innerHTML=rows.length?`<div class="tbl-wrap"><table><thead><tr><th>Aseguradora</th><th>Viajes</th><th>Clientes</th><th>Gasto total</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.aseg}</td><td>${r.viajes}</td><td>${[...r.clientes].join(', ')||'—'}</td><td><strong>${fmt(r.total)}</strong></td></tr>`).join('')}</tbody></table></div>`:'<div style="font-size:12px;color:var(--txt2);">Sin datos</div>';
 }
-
+ 
 function showTab(t,btn){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
@@ -608,7 +608,7 @@ function showTab(t,btn){
 }
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
-
+ 
 async function guardarViaje(){
   const codigo=document.getElementById('v-codigo').value.trim();
   if(!codigo)return;
@@ -628,7 +628,7 @@ async function guardarViaje(){
   showAlert('viajes-alert','Viaje guardado correctamente.','ok');
   await loadAll();
 }
-
+ 
 async function guardarGasto(){
   const monto=parseFloat(document.getElementById('c-monto').value)||0;
   if(!monto){showAlert('captura-alert','Ingresa un monto válido.','err');return;}
@@ -659,13 +659,13 @@ async function guardarGasto(){
     showAlert('captura-alert',error.message,'err');
   }
 }
-
+ 
 async function delGasto(id,path){
   if(path)await db.storage.from('comprobantes').remove([path]);
   await db.from('gastos').delete().eq('id',id);
   await loadAll();
 }
-
+ 
 function clearForm(){
   ['c-monto','c-iva','c-total','c-proveedor','c-rfc','c-folio','c-notas'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('c-fecha').value=today();
@@ -676,14 +676,14 @@ function clearForm(){
   document.getElementById('scan-progress').style.display='none';
   document.getElementById('upload-status').textContent='';
 }
-
+ 
 async function uploadFile(file){
   const ext=file.name.split('.').pop()||'jpg';
   const path=`${user.id}/${Date.now()}.${ext}`;
   const{data,error}=await db.storage.from('comprobantes').upload(path,file,{contentType:file.type,upsert:false});
   return error?null:data.path;
 }
-
+ 
 async function viewImg(path){
   const{data}=await db.storage.from('comprobantes').createSignedUrl(path,600);
   if(data?.signedUrl){
@@ -691,7 +691,7 @@ async function viewImg(path){
     openModal('modal-img');
   }
 }
-
+ 
 function showProv(vid){
   const v=viajes.find(x=>x.id===vid);
   const ps=provisiones.filter(p=>p.viaje_id===vid);
@@ -708,58 +708,106 @@ function showProv(vid){
   }).join('')}<tr style="font-weight:600;"><td>Total</td><td>${fmt(tP)}</td><td>${fmt(tR)}</td><td class="${(tP-tR)>=0?'pos':'neg'}">${fmt(tP-tR)}</td></tr></tbody></table></div>`;
   openModal('modal-prov');
 }
-
+ 
 function triggerScan(){document.getElementById('scan-input').click();}
-
+ 
 async function processScan(input){
   const file=input.files[0];
   if(!file)return;
-  pendingFile=file;pendingMime=file.type||'image/jpeg';
-  const reader=new FileReader();
-  reader.onload=async e=>{
-    const b64=e.target.result.split(',')[1];
-    document.getElementById('scan-preview-img').src=e.target.result;
+  pendingFile=file;
+  document.getElementById('scan-progress').style.display='block';
+  document.getElementById('scan-result-box').style.display='none';
+  document.getElementById('scan-status').textContent='Preparando imagen...';
+  animFill('scan-fill',30,1000);
+ 
+  try{
+    // Comprimir y normalizar la imagen via canvas (resuelve HEIC, imágenes gigantes, etc.)
+    const compressed = await compressImage(file);
+    pendingFile = compressed.blob;
+    pendingMime = 'image/jpeg';
+ 
+    // Mostrar preview
+    document.getElementById('scan-preview-img').src=compressed.dataUrl;
     document.getElementById('scan-preview-img').style.display='block';
     document.getElementById('scan-placeholder').style.display='none';
-    document.getElementById('scan-progress').style.display='block';
-    document.getElementById('scan-result-box').style.display='none';
+ 
     document.getElementById('scan-status').textContent='Extrayendo datos con IA...';
     animFill('scan-fill',85,3500);
-    try{
-      const resp=await fetch('https://api.anthropic.com/v1/messages',{
-        method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          model:'claude-sonnet-4-20250514',max_tokens:1000,
-          messages:[{role:'user',content:[
-            {type:'image',source:{type:'base64',media_type:pendingMime,data:b64}},
-            {type:'text',text:'Eres un extractor de datos de comprobantes fiscales mexicanos. Analiza esta imagen y responde SOLO con JSON válido sin markdown con estos campos: {"proveedor":"string","rfc":"string|null","monto":number,"moneda":"MXN|USD|EUR","fecha":"YYYY-MM-DD|null","folio":"string|null","tipo":"ticket|factura|nota|otro","iva":number|null,"categoria_sugerida":"hospedaje|transporte|avion|taxi|autobus|peajes|kilometraje|viaticos|propina|honorarios|otros","descripcion":"string"}'}
-          ]}]
-        })
-      });
-      const data=await resp.json();
-      document.getElementById('scan-fill').style.width='100%';
-      const text=data.content?.find(c=>c.type==='text')?.text||'{}';
-      const parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
-      document.getElementById('scan-status').textContent='Datos extraídos';
-      document.getElementById('scan-result-box').style.display='block';
-      document.getElementById('scan-result-box').textContent=`${parsed.proveedor||'?'} · ${parsed.monto||'?'} ${parsed.moneda||'MXN'} · ${parsed.fecha||'—'}`;
-      if(parsed.proveedor)document.getElementById('c-proveedor').value=parsed.proveedor;
-      if(parsed.rfc)document.getElementById('c-rfc').value=parsed.rfc;
-      if(parsed.monto)document.getElementById('c-monto').value=parsed.monto;
-      if(parsed.moneda)document.getElementById('c-moneda').value=parsed.moneda;
-      if(parsed.fecha)document.getElementById('c-fecha').value=parsed.fecha;
-      if(parsed.folio)document.getElementById('c-folio').value=parsed.folio;
-      if(parsed.tipo)document.getElementById('c-tipo').value=parsed.tipo;
-      if(parsed.categoria_sugerida)document.getElementById('c-cat').value=parsed.categoria_sugerida;
-      if(parsed.iva){document.getElementById('c-iva').value=parsed.iva;calcTotal();}
-      if(parsed.descripcion)document.getElementById('c-notas').value=parsed.descripcion;
-    }catch(e){
-      document.getElementById('scan-status').textContent='Error al procesar. Ingresa manualmente.';
+ 
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:1000,
+        messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:'image/jpeg',data:compressed.b64}},
+          {type:'text',text:'Eres un extractor de datos de comprobantes fiscales mexicanos. Analiza esta imagen y responde SOLO con JSON válido sin markdown con estos campos: {"proveedor":"string","rfc":"string|null","monto":number,"moneda":"MXN|USD|EUR","fecha":"YYYY-MM-DD|null","folio":"string|null","tipo":"ticket|factura|nota|otro","iva":number|null,"categoria_sugerida":"hospedaje|transporte|avion|taxi|autobus|peajes|kilometraje|viaticos|propina|honorarios|otros","descripcion":"string"}'}
+        ]}]
+      })
+    });
+ 
+    if(!resp.ok){
+      const errBody=await resp.text();
+      throw new Error(`API ${resp.status}: ${errBody.slice(0,120)}`);
     }
-  };
-  reader.readAsDataURL(file);
+ 
+    const data=await resp.json();
+    document.getElementById('scan-fill').style.width='100%';
+ 
+    if(data.error) throw new Error(data.error.message||'Error de API');
+ 
+    const text=data.content?.find(c=>c.type==='text')?.text||'{}';
+    const parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
+    document.getElementById('scan-status').textContent='Datos extraídos correctamente';
+    document.getElementById('scan-result-box').style.display='block';
+    document.getElementById('scan-result-box').textContent=`${parsed.proveedor||'?'} · ${parsed.monto||'?'} ${parsed.moneda||'MXN'} · ${parsed.fecha||'—'}`;
+    if(parsed.proveedor)document.getElementById('c-proveedor').value=parsed.proveedor;
+    if(parsed.rfc)document.getElementById('c-rfc').value=parsed.rfc;
+    if(parsed.monto)document.getElementById('c-monto').value=parsed.monto;
+    if(parsed.moneda)document.getElementById('c-moneda').value=parsed.moneda;
+    if(parsed.fecha)document.getElementById('c-fecha').value=parsed.fecha;
+    if(parsed.folio)document.getElementById('c-folio').value=parsed.folio;
+    if(parsed.tipo)document.getElementById('c-tipo').value=parsed.tipo;
+    if(parsed.categoria_sugerida)document.getElementById('c-cat').value=parsed.categoria_sugerida;
+    if(parsed.iva){document.getElementById('c-iva').value=parsed.iva;calcTotal();}
+    if(parsed.descripcion)document.getElementById('c-notas').value=parsed.descripcion;
+ 
+  }catch(err){
+    document.getElementById('scan-status').textContent='Error: '+err.message;
+    document.getElementById('scan-fill').style.background='var(--err)';
+    document.getElementById('scan-fill').style.width='100%';
+    console.error('processScan error:',err);
+  }
 }
-
+ 
+// Comprime cualquier imagen (incluye HEIC via canvas) a máx 1600px, JPEG 85%
+function compressImage(file){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    const url=URL.createObjectURL(file);
+    img.onload=()=>{
+      URL.revokeObjectURL(url);
+      const MAX=1600;
+      let w=img.width, h=img.height;
+      if(w>MAX||h>MAX){
+        if(w>h){h=Math.round(h*MAX/w);w=MAX;}
+        else{w=Math.round(w*MAX/h);h=MAX;}
+      }
+      const canvas=document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      const dataUrl=canvas.toDataURL('image/jpeg',0.85);
+      const b64=dataUrl.split(',')[1];
+      canvas.toBlob(blob=>resolve({blob,dataUrl,b64}),'image/jpeg',0.85);
+    };
+    img.onerror=()=>{
+      URL.revokeObjectURL(url);
+      reject(new Error('No se pudo leer la imagen. Intenta con otra foto.'));
+    };
+    img.src=url;
+  });
+}
+ 
 function calcIva(){
   const monto=parseFloat(document.getElementById('c-monto').value)||0;
   const iva=parseFloat((monto*0.16).toFixed(2));
@@ -777,7 +825,7 @@ function showAlert(containerId,msg,type){
   el.innerHTML=`<div class="alert alert-${type}">${msg}</div>`;
   setTimeout(()=>{el.innerHTML='';},4000);
 }
-
+ 
 function animFill(id,target,dur){
   const el=document.getElementById(id);if(!el)return;
   el.style.width='0%';
@@ -786,7 +834,7 @@ function animFill(id,target,dur){
   const t=setInterval(()=>{curr=Math.min(curr+inc,target);el.style.width=curr+'%';if(curr>=target)clearInterval(t);},ms);
 }
 </script>
-
+ 
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
