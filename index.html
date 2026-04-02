@@ -391,6 +391,117 @@
   </div>
 </div>
  
+ 
+<!-- MODAL EDITAR GASTO -->
+<div class="modal-bg" id="modal-edit-gasto">
+  <div class="modal">
+    <div class="modal-title">Editar gasto</div>
+    <input type="hidden" id="edit-id">
+    <input type="hidden" id="edit-imagen-path">
+    <label>Viaje / Siniestro</label>
+    <select id="edit-viaje"></select>
+    <div class="grid2">
+      <div>
+        <label>Tipo</label>
+        <select id="edit-tipo">
+          <option value="ticket">Ticket</option>
+          <option value="factura">Factura</option>
+          <option value="nota">Nota</option>
+          <option value="otro">Otro</option>
+        </select>
+      </div>
+      <div>
+        <label>Categoría</label>
+        <select id="edit-cat">
+          <option value="hospedaje">Hospedaje</option>
+          <option value="transporte">Transporte</option>
+          <option value="avion">Avión</option>
+          <option value="taxi">Taxi</option>
+          <option value="autobus">Autobús</option>
+          <option value="peajes">Peajes</option>
+          <option value="kilometraje">Kilometraje</option>
+          <option value="viaticos">Viáticos</option>
+          <option value="propina">Propina</option>
+          <option value="honorarios">Honorarios</option>
+          <option value="otros">Otros</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid2">
+      <div><label>Proveedor</label><input type="text" id="edit-proveedor"></div>
+      <div><label>RFC proveedor</label><input type="text" id="edit-rfc"></div>
+    </div>
+    <div class="grid2">
+      <div><label>Monto (sin IVA)</label><input type="number" id="edit-monto" step="0.01" inputmode="decimal" oninput="editCalcTotal()"></div>
+      <div><label>Moneda</label><select id="edit-moneda"><option>MXN</option><option>USD</option><option>EUR</option></select></div>
+    </div>
+    <div class="grid2">
+      <div><label>IVA</label><input type="number" id="edit-iva" step="0.01" inputmode="decimal" oninput="editCalcTotal()"></div>
+      <div><label>Total con IVA</label><input type="number" id="edit-total" step="0.01" inputmode="decimal" style="background:var(--bg2);" readonly></div>
+    </div>
+    <div class="grid2">
+      <div><label>Fecha</label><input type="date" id="edit-fecha"></div>
+      <div><label>Folio</label><input type="text" id="edit-folio"></div>
+    </div>
+    <label>Notas</label>
+    <textarea id="edit-notas"></textarea>
+    <div id="edit-alert" style="margin-top:8px;"></div>
+    <div class="flex flex-end mt">
+      <button class="btn btn-sm" onclick="closeModal('modal-edit-gasto')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="guardarEdicionGasto()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+ 
+<div class="modal-bg" id="modal-edit-gasto">
+  <div class="modal">
+    <div class="modal-title">Editar gasto</div>
+    <div id="edit-alert"></div>
+    <label>Viaje / Siniestro</label><select id="e-viaje"></select>
+    <div class="grid2">
+      <div><label>Tipo</label>
+        <select id="e-tipo">
+          <option value="ticket">Ticket</option><option value="factura">Factura</option>
+          <option value="nota">Nota</option><option value="otro">Otro</option>
+        </select>
+      </div>
+      <div><label>Categoría</label>
+        <select id="e-cat">
+          <option value="hospedaje">Hospedaje</option><option value="transporte">Transporte</option>
+          <option value="avion">Avión</option><option value="taxi">Taxi</option>
+          <option value="autobus">Autobús</option><option value="peajes">Peajes</option>
+          <option value="kilometraje">Kilometraje</option><option value="viaticos">Viáticos</option>
+          <option value="propina">Propina</option><option value="honorarios">Honorarios</option>
+          <option value="otros">Otros</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid2">
+      <div><label>Proveedor</label><input type="text" id="e-proveedor" placeholder="Nombre del proveedor"></div>
+      <div><label>RFC proveedor</label><input type="text" id="e-rfc" placeholder="RFC"></div>
+    </div>
+    <div class="grid2">
+      <div><label>Monto (sin IVA)</label><input type="number" id="e-monto" placeholder="0.00" step="0.01" inputmode="decimal"></div>
+      <div><label>Moneda</label><select id="e-moneda"><option>MXN</option><option>USD</option><option>EUR</option></select></div>
+    </div>
+    <div class="grid2">
+      <div><label>IVA</label><input type="number" id="e-iva" placeholder="0.00" step="0.01" inputmode="decimal"></div>
+      <div><label>Total con IVA</label><input type="number" id="e-total" placeholder="0.00" readonly style="background:var(--bg2);"></div>
+    </div>
+    <div class="grid2">
+      <div><label>Fecha</label><input type="date" id="e-fecha"></div>
+      <div><label>Folio</label><input type="text" id="e-folio" placeholder="Núm. folio"></div>
+    </div>
+    <label>Notas</label>
+    <textarea id="e-notas" placeholder="Descripción adicional..."></textarea>
+    <input type="hidden" id="e-id">
+    <div class="flex flex-end mt">
+      <button class="btn btn-sm" onclick="closeModal('modal-edit-gasto')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="guardarEdicion()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+ 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 const SURL='https://lxtieqaldwcntxaqklww.supabase.co';
@@ -535,7 +646,7 @@ function renderGastos(){
   document.getElementById('gastos-tbody').innerHTML=f.map(g=>{
     const v=viajes.find(x=>x.id===g.viaje_id);
     const imgBtn=g.imagen_path?`<div class="thumb-wrap" onclick="viewImg('${g.imagen_path}')"><img src="" data-path="${g.imagen_path}" alt="img"></div>`:'—';
-    return `<tr><td>${g.fecha}</td><td>${g.proveedor||'—'}</td><td>${g.tipo_comprobante||'—'}</td><td><span class="tag tag-cat">${g.categoria||'—'}</span></td><td>${v?v.codigo:'—'}</td><td><strong>${fmt(g.monto,g.moneda)}</strong></td><td>${g.iva>0?fmt(g.iva,g.moneda):'—'}</td><td>${g.moneda}</td><td>${g.numero_folio||'—'}</td><td>${imgBtn}</td><td><button class="btn btn-sm btn-danger" onclick="delGasto('${g.id}','${g.imagen_path||''}')">✕</button></td></tr>`;
+    return `<tr><td>${g.fecha}</td><td>${g.proveedor||'—'}</td><td>${g.tipo_comprobante||'—'}</td><td><span class="tag tag-cat">${g.categoria||'—'}</span></td><td>${v?v.codigo:'—'}</td><td><strong>${fmt(g.monto,g.moneda)}</strong></td><td>${g.iva>0?fmt(g.iva,g.moneda):'—'}</td><td>${g.moneda}</td><td>${g.numero_folio||'—'}</td><td>${imgBtn}</td><td style="white-space:nowrap;"><button class="btn btn-sm" onclick="openEditGasto('${g.id}')" style="margin-right:4px;">✎</button><button class="btn btn-sm btn-danger" onclick="delGasto('${g.id}','${g.imagen_path||''}')">✕</button></td></tr>`;
   }).join('')||'<tr><td colspan="10" style="text-align:center;color:var(--txt2);padding:20px;">Sin registros</td></tr>';
   loadThumbs();
 }
@@ -605,6 +716,66 @@ function showTab(t,btn){
   document.getElementById('tab-'+t).classList.add('active');
   if(btn)btn.classList.add('active');
   if(t==='reportes')renderReportes();
+}
+ 
+function openEditGasto(id){
+  const g=gastos.find(x=>x.id===id);
+  if(!g)return;
+  // Poblar selects de viaje
+  const base='<option value="">— Sin viaje —</option>'+viajes.map(v=>`<option value="${v.id}">${v.codigo}</option>`).join('');
+  document.getElementById('edit-viaje').innerHTML=base;
+  // Llenar campos
+  document.getElementById('edit-id').value=g.id;
+  document.getElementById('edit-imagen-path').value=g.imagen_path||'';
+  document.getElementById('edit-viaje').value=g.viaje_id||'';
+  document.getElementById('edit-tipo').value=g.tipo_comprobante||'ticket';
+  document.getElementById('edit-cat').value=g.categoria||'otros';
+  document.getElementById('edit-proveedor').value=g.proveedor||'';
+  document.getElementById('edit-rfc').value=g.rfc_proveedor||'';
+  document.getElementById('edit-monto').value=g.monto||'';
+  document.getElementById('edit-iva').value=g.iva||'';
+  document.getElementById('edit-total').value=((+g.monto||0)+(+g.iva||0)).toFixed(2);
+  document.getElementById('edit-moneda').value=g.moneda||'MXN';
+  document.getElementById('edit-fecha').value=g.fecha||'';
+  document.getElementById('edit-folio').value=g.numero_folio||'';
+  document.getElementById('edit-notas').value=g.notas||'';
+  document.getElementById('edit-alert').innerHTML='';
+  openModal('modal-edit-gasto');
+}
+ 
+function editCalcTotal(){
+  const monto=parseFloat(document.getElementById('edit-monto').value)||0;
+  const iva=parseFloat(document.getElementById('edit-iva').value)||0;
+  document.getElementById('edit-total').value=(monto+iva).toFixed(2);
+}
+ 
+async function guardarEdicionGasto(){
+  const id=document.getElementById('edit-id').value;
+  const monto=parseFloat(document.getElementById('edit-monto').value)||0;
+  if(!monto){
+    document.getElementById('edit-alert').innerHTML='<div class="alert alert-err">El monto no puede ser cero.</div>';
+    return;
+  }
+  const{error}=await db.from('gastos').update({
+    viaje_id:document.getElementById('edit-viaje').value||null,
+    tipo_comprobante:document.getElementById('edit-tipo').value,
+    proveedor:document.getElementById('edit-proveedor').value||null,
+    rfc_proveedor:document.getElementById('edit-rfc').value||null,
+    categoria:document.getElementById('edit-cat').value,
+    monto,
+    iva:parseFloat(document.getElementById('edit-iva').value)||0,
+    moneda:document.getElementById('edit-moneda').value,
+    fecha:document.getElementById('edit-fecha').value,
+    numero_folio:document.getElementById('edit-folio').value||null,
+    notas:document.getElementById('edit-notas').value||null,
+    updated_at:new Date().toISOString()
+  }).eq('id',id);
+  if(error){
+    document.getElementById('edit-alert').innerHTML=`<div class="alert alert-err">${error.message}</div>`;
+  }else{
+    closeModal('modal-edit-gasto');
+    await loadAll();
+  }
 }
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
@@ -829,6 +1000,62 @@ function calcTotal(){
   const iva=parseFloat(document.getElementById('c-iva').value)||0;
   document.getElementById('c-total').value=(monto+iva).toFixed(2)||'';
 }
+function editGasto(id){
+  const g=gastos.find(x=>x.id===id);
+  if(!g)return;
+  const base='<option value="">— Sin viaje —</option>'+viajes.map(v=>`<option value="${v.id}">${v.codigo}</option>`).join('');
+  document.getElementById('e-viaje').innerHTML=base;
+  document.getElementById('e-id').value=g.id;
+  document.getElementById('e-viaje').value=g.viaje_id||'';
+  document.getElementById('e-tipo').value=g.tipo_comprobante||'ticket';
+  document.getElementById('e-cat').value=g.categoria||'otros';
+  document.getElementById('e-proveedor').value=g.proveedor||'';
+  document.getElementById('e-rfc').value=g.rfc_proveedor||'';
+  document.getElementById('e-monto').value=g.monto||'';
+  document.getElementById('e-iva').value=g.iva||'';
+  const m=parseFloat(g.monto)||0, iv=parseFloat(g.iva)||0;
+  document.getElementById('e-total').value=(m+iv).toFixed(2);
+  document.getElementById('e-moneda').value=g.moneda||'MXN';
+  document.getElementById('e-fecha').value=g.fecha||'';
+  document.getElementById('e-folio').value=g.numero_folio||'';
+  document.getElementById('e-notas').value=g.notas||'';
+  document.getElementById('edit-alert').innerHTML='';
+  const recalc=()=>{
+    const mv=parseFloat(document.getElementById('e-monto').value)||0;
+    const iv2=parseFloat(document.getElementById('e-iva').value)||0;
+    document.getElementById('e-total').value=(mv+iv2).toFixed(2);
+  };
+  document.getElementById('e-monto').oninput=recalc;
+  document.getElementById('e-iva').oninput=recalc;
+  openModal('modal-edit-gasto');
+}
+ 
+async function guardarEdicion(){
+  const id=document.getElementById('e-id').value;
+  const monto=parseFloat(document.getElementById('e-monto').value)||0;
+  if(!monto){showAlert('edit-alert','Ingresa un monto válido.','err');return;}
+  const{error}=await db.from('gastos').update({
+    viaje_id:document.getElementById('e-viaje').value||null,
+    tipo_comprobante:document.getElementById('e-tipo').value,
+    proveedor:document.getElementById('e-proveedor').value||null,
+    rfc_proveedor:document.getElementById('e-rfc').value||null,
+    categoria:document.getElementById('e-cat').value,
+    monto,
+    iva:parseFloat(document.getElementById('e-iva').value)||0,
+    moneda:document.getElementById('e-moneda').value,
+    fecha:document.getElementById('e-fecha').value,
+    numero_folio:document.getElementById('e-folio').value||null,
+    notas:document.getElementById('e-notas').value||null,
+    updated_at:new Date().toISOString()
+  }).eq('id',id);
+  if(!error){
+    closeModal('modal-edit-gasto');
+    await loadAll();
+  }else{
+    showAlert('edit-alert',error.message,'err');
+  }
+}
+ 
 function showAlert(containerId,msg,type){
   const el=document.getElementById(containerId);
   if(!el)return;
