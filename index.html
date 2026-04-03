@@ -659,12 +659,16 @@ function renderDashboard(){
     <div class="card"><div class="card-title">Provisiones</div><div class="card-value">${fmt(tP)}</div><div class="card-sub">estimado global</div></div>
     <div class="card"><div class="card-title">Diferencial</div><div class="card-value ${diff>=0?'pos':'neg'}">${fmt(diff)}</div><div class="card-sub">${diff>=0?'disponible':'excedido'}</div></div>
     <div class="card"><div class="card-title">Viajes activos</div><div class="card-value">${vA}</div><div class="card-sub">de ${viajes.length} total</div></div>`;
-  const cats=['hospedaje','transporte','viaticos','honorarios','otros'];
-  const maxC=Math.max(...cats.map(c=>gastos.filter(g=>g.categoria===c).reduce((s,g)=>s+(+g.monto||0),0)),1);
-  document.getElementById('cat-chart').innerHTML=cats.map(c=>{
-    const t=gastos.filter(g=>g.categoria===c).reduce((s,g)=>s+(+g.monto||0),0);
-    return `<div class="bar-row"><div class="bar-label">${c}</div><div class="pbar-wrap"><div class="pbar" style="width:${(t/maxC*100).toFixed(1)}%"></div></div><div class="bar-amt">${fmt(t)}</div></div>`;
-  }).join('');
+  const CATS_ALL=['hospedaje','transporte','avion','taxi','autobus','peajes','kilometraje','viaticos','propina','alimentos','honorarios','otros'];
+  const catTotals=CATS_ALL.map(c=>({c,t:gastos.filter(g=>g.categoria===c).reduce((s,g)=>s+(+g.monto||0),0)})).filter(x=>x.t>0);
+  const maxC=Math.max(...catTotals.map(x=>x.t),1);
+  const catEl=document.getElementById('cat-chart');
+  catEl.style.maxHeight='220px';
+  catEl.style.overflowY='auto';
+  catEl.style.paddingRight='4px';
+  catEl.innerHTML=catTotals.length
+    ?catTotals.map(x=>`<div class="bar-row"><div class="bar-label">${x.c}</div><div class="pbar-wrap"><div class="pbar" style="width:${(x.t/maxC*100).toFixed(1)}%"></div></div><div class="bar-amt">${fmt(x.t)}</div></div>`).join('')
+    :'<div style="font-size:12px;color:var(--txt2);">Sin gastos aún</div>';
   const vAct=viajes.filter(v=>v.estado==='activo').slice(0,5);
   document.getElementById('prov-chart').innerHTML=vAct.length?vAct.map(v=>{
     const prov=provisiones.filter(p=>p.viaje_id===v.id).reduce((s,p)=>s+(+p.monto_estimado||0),0);
