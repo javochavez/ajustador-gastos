@@ -1123,16 +1123,35 @@ function showProv(vid){
   const v=viajes.find(x=>x.id===vid);
   const ps=provisiones.filter(p=>p.viaje_id===vid);
   const gs=gastos.filter(g=>g.viaje_id===vid);
-  const cats=['hospedaje','transporte','viaticos','honorarios','otros'];
+  const CATS_PROV=['hospedaje','transporte','avion','taxi','autobus','peajes','kilometraje','viaticos','propina','alimentos','honorarios','otros'];
   document.getElementById('modal-prov-title').textContent=`Provisiones: ${v?.codigo||''}`;
   const tP=ps.reduce((s,p)=>s+(+p.monto_estimado||0),0);
   const tR=gs.reduce((s,g)=>s+(+g.monto||0),0);
-  document.getElementById('modal-prov-body').innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Categoría</th><th>Provisión</th><th>Real</th><th>Diferencial</th></tr></thead><tbody>${cats.map(c=>{
+  // Solo mostrar categorías que tengan provisión > 0 O gasto > 0
+  const filas=CATS_PROV.map(c=>{
     const prov=ps.filter(p=>p.categoria===c).reduce((s,p)=>s+(+p.monto_estimado||0),0);
     const real=gs.filter(g=>g.categoria===c).reduce((s,g)=>s+(+g.monto||0),0);
-    const d=prov-real;
-    return `<tr><td>${c}</td><td>${fmt(prov)}</td><td>${fmt(real)}</td><td class="${d>=0?'pos':'neg'}">${fmt(d)}</td></tr>`;
-  }).join('')}<tr style="font-weight:600;"><td>Total</td><td>${fmt(tP)}</td><td>${fmt(tR)}</td><td class="${(tP-tR)>=0?'pos':'neg'}">${fmt(tP-tR)}</td></tr></tbody></table></div>`;
+    return {c,prov,real};
+  }).filter(x=>x.prov>0||x.real>0);
+  const bodyContent=filas.length
+    ?filas.map(({c,prov,real})=>{
+        const d=prov-real;
+        return `<tr><td>${c}</td><td>${fmt(prov)}</td><td>${fmt(real)}</td><td class="${d>=0?'pos':'neg'}">${fmt(d)}</td></tr>`;
+      }).join('')
+    :'<tr><td colspan="4" style="text-align:center;color:var(--txt2);padding:12px;">Sin gastos ni provisiones para este viaje</td></tr>';
+  document.getElementById('modal-prov-body').innerHTML=`
+    <div style="max-height:320px;overflow-y:auto;">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Categoría</th><th>Provisión</th><th>Real</th><th>Diferencial</th></tr></thead>
+          <tbody>${bodyContent}</tbody>
+          ${filas.length?`<tfoot><tr style="font-weight:600;border-top:1.5px solid var(--bdr);">
+            <td>Total</td><td>${fmt(tP)}</td><td>${fmt(tR)}</td>
+            <td class="${(tP-tR)>=0?'pos':'neg'}">${fmt(tP-tR)}</td>
+          </tr></tfoot>`:''}
+        </table>
+      </div>
+    </div>`;
   openModal('modal-prov');
 }
  
