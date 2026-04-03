@@ -320,26 +320,81 @@
  
     <!-- REPORTES -->
     <div id="tab-reportes" class="section">
-      <div class="grid2" style="margin-bottom:14px;align-items:start;">
+ 
+      <!-- Filtros globales + botones de exportación -->
+      <div class="card" style="margin-bottom:12px;">
+        <div class="flex flex-sb" style="flex-wrap:wrap;gap:10px;align-items:flex-end;">
+          <div class="flex" style="flex-wrap:wrap;gap:10px;align-items:flex-end;">
+            <div>
+              <label>Viaje / Siniestro</label>
+              <select id="rep-viaje-filtro" onchange="renderReportes()" style="width:auto;min-width:160px;">
+                <option value="">Todos los viajes</option>
+              </select>
+            </div>
+            <div>
+              <label>Desde</label>
+              <input type="date" id="rep-desde" onchange="renderReportes()" style="width:auto;">
+            </div>
+            <div>
+              <label>Hasta</label>
+              <input type="date" id="rep-hasta" onchange="renderReportes()" style="width:auto;">
+            </div>
+            <div>
+              <label>Categoría</label>
+              <select id="rep-cat-filtro" onchange="renderReportes()" style="width:auto;min-width:130px;">
+                <option value="">Todas</option>
+                <option value="hospedaje">Hospedaje</option>
+                <option value="transporte">Transporte</option>
+                <option value="avion">Avión</option>
+                <option value="taxi">Taxi</option>
+                <option value="autobus">Autobús</option>
+                <option value="peajes">Peajes</option>
+                <option value="kilometraje">Kilometraje</option>
+                <option value="viaticos">Viáticos</option>
+                <option value="propina">Propina</option>
+                <option value="honorarios">Honorarios</option>
+                <option value="otros">Otros</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex" style="gap:6px;">
+            <button class="btn btn-sm" onclick="exportCSV()">⬇ CSV</button>
+            <button class="btn btn-sm" onclick="exportExcel()">⬇ Excel</button>
+            <button class="btn btn-sm btn-primary" onclick="exportPDF()">⬇ PDF</button>
+          </div>
+        </div>
+      </div>
+ 
+      <!-- KPIs del período filtrado -->
+      <div id="rep-kpis" class="grid4" style="margin-bottom:12px;"></div>
+ 
+      <!-- Tabla detalle -->
+      <div class="card" style="margin-bottom:12px;">
+        <div class="sec-title">Detalle de gastos</div>
+        <div class="tbl-wrap">
+          <table id="rep-tabla">
+            <thead><tr>
+              <th>Fecha</th><th>Viaje</th><th>Proveedor</th><th>Categoría</th>
+              <th>Tipo</th><th>Folio</th><th>Moneda</th><th>Monto</th><th>IVA</th><th>Total</th>
+            </tr></thead>
+            <tbody id="rep-tbody"></tbody>
+            <tfoot id="rep-tfoot"></tfoot>
+          </table>
+        </div>
+      </div>
+ 
+      <!-- Resumen por categoría y por viaje lado a lado -->
+      <div class="grid2">
+        <div class="card">
+          <div class="sec-title">Por categoría</div>
+          <div id="rep-cat-chart"></div>
+        </div>
         <div class="card">
           <div class="sec-title">Por viaje</div>
-          <label>Seleccionar viaje</label>
-          <select id="rep-viaje" onchange="renderReporteViaje()"></select>
-          <div id="rep-viaje-content" style="margin-top:12px;"></div>
-        </div>
-        <div class="card">
-          <div class="sec-title">Por período</div>
-          <div class="grid2">
-            <div><label>Desde</label><input type="date" id="rep-desde" onchange="renderReportePeriodo()"></div>
-            <div><label>Hasta</label><input type="date" id="rep-hasta" onchange="renderReportePeriodo()"></div>
-          </div>
-          <div id="rep-periodo-content" style="margin-top:12px;"></div>
+          <div id="rep-viaje-chart"></div>
         </div>
       </div>
-      <div class="card">
-        <div class="sec-title">Por aseguradora / cliente</div>
-        <div id="rep-aseg-content"></div>
-      </div>
+ 
     </div>
  
   </div><!-- /content -->
@@ -658,56 +713,224 @@ function populateSelects(){
   if(el('c-viaje'))el('c-viaje').innerHTML=base;
   if(el('filtro-viaje'))el('filtro-viaje').innerHTML=filt;
   if(el('rep-viaje'))el('rep-viaje').innerHTML=base;
+  // No tocar rep-viaje-filtro aquí — renderReportes lo maneja para preservar selección
 }
  
-function renderReportes(){renderReporteViaje();renderReportePeriodo();renderReporteAseg();}
+// ── REPORTES ─────────────────────────────────────────────────────────────────
+const TODAS_CATS=['hospedaje','transporte','avion','taxi','autobus','peajes','kilometraje','viaticos','propina','honorarios','otros'];
  
-function renderReporteViaje(){
-  const vid=document.getElementById('rep-viaje')?.value;
-  const el=document.getElementById('rep-viaje-content');
-  if(!vid||!el){if(el)el.innerHTML='';return;}
-  const gs=gastos.filter(g=>g.viaje_id===vid);
-  const ps=provisiones.filter(p=>p.viaje_id===vid);
-  const cats=['hospedaje','transporte','viaticos','honorarios','otros'];
-  const tP=ps.reduce((s,p)=>s+(+p.monto_estimado||0),0);
-  const tR=gs.reduce((s,g)=>s+(+g.monto||0),0);
-  el.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Categoría</th><th>Provisión</th><th>Real</th><th>Diferencial</th></tr></thead><tbody>${cats.map(c=>{
-    const prov=ps.filter(p=>p.categoria===c).reduce((s,p)=>s+(+p.monto_estimado||0),0);
-    const real=gs.filter(g=>g.categoria===c).reduce((s,g)=>s+(+g.monto||0),0);
-    const d=prov-real;
-    return `<tr><td>${c}</td><td>${fmt(prov)}</td><td>${fmt(real)}</td><td class="${d>=0?'pos':'neg'}">${fmt(d)}</td></tr>`;
-  }).join('')}<tr style="font-weight:600;border-top:1px solid var(--bdr)"><td>Total</td><td>${fmt(tP)}</td><td>${fmt(tR)}</td><td class="${(tP-tR)>=0?'pos':'neg'}">${fmt(tP-tR)}</td></tr></tbody></table></div>`;
+function filtrarGastos(){
+  const desde=document.getElementById('rep-desde')?.value||'';
+  const hasta=document.getElementById('rep-hasta')?.value||'';
+  const vid=document.getElementById('rep-viaje-filtro')?.value||'';
+  const cat=document.getElementById('rep-cat-filtro')?.value||'';
+  return gastos.filter(g=>
+    (!desde||g.fecha>=desde)&&
+    (!hasta||g.fecha<=hasta)&&
+    (!vid||g.viaje_id===vid)&&
+    (!cat||g.categoria===cat)
+  );
 }
  
-function renderReportePeriodo(){
-  const desde=document.getElementById('rep-desde')?.value;
-  const hasta=document.getElementById('rep-hasta')?.value;
-  const el=document.getElementById('rep-periodo-content');
-  if(!el)return;
-  const gs=gastos.filter(g=>(!desde||g.fecha>=desde)&&(!hasta||g.fecha<=hasta));
-  if(!gs.length){el.innerHTML='<div style="font-size:12px;color:var(--txt2);">Sin datos en el período</div>';return;}
-  const total=gs.reduce((s,g)=>s+(+g.monto||0),0);
-  el.innerHTML=`<div style="font-size:13px;font-weight:500;margin-bottom:8px;">${fmt(total)} — ${gs.length} comprobantes</div>`+
-  ['hospedaje','transporte','viaticos','honorarios','otros'].map(c=>{
-    const t=gs.filter(g=>g.categoria===c).reduce((s,g)=>s+(+g.monto||0),0);
-    if(!t)return '';
-    return `<div class="bar-row"><div class="bar-label">${c}</div><div class="pbar-wrap"><div class="pbar" style="width:${(t/total*100).toFixed(0)}%"></div></div><div class="bar-amt">${fmt(t)}</div></div>`;
-  }).join('');
-}
+function renderReportes(){
+  // Poblar select de viajes del reporte
+  const selV=document.getElementById('rep-viaje-filtro');
+  if(selV){
+    const cur=selV.value;
+    selV.innerHTML='<option value="">Todos los viajes</option>'+viajes.map(v=>`<option value="${v.id}">${v.codigo}</option>`).join('');
+    selV.value=cur;
+  }
  
-function renderReporteAseg(){
-  const el=document.getElementById('rep-aseg-content');
-  if(!el)return;
-  const grp={};
-  viajes.forEach(v=>{
-    const k=v.aseguradora||'Sin aseguradora';
-    if(!grp[k])grp[k]={aseg:k,total:0,viajes:0,clientes:new Set()};
-    grp[k].total+=gastos.filter(g=>g.viaje_id===v.id).reduce((s,g)=>s+(+g.monto||0),0);
-    grp[k].viajes++;
-    if(v.cliente)grp[k].clientes.add(v.cliente);
+  const gs=filtrarGastos();
+  const tMonto=gs.reduce((s,g)=>s+(+g.monto||0),0);
+  const tIva=gs.reduce((s,g)=>s+(+g.iva||0),0);
+  const tTotal=tMonto+tIva;
+ 
+  // KPIs
+  document.getElementById('rep-kpis').innerHTML=`
+    <div class="card"><div class="card-title">Comprobantes</div><div class="card-value">${gs.length}</div></div>
+    <div class="card"><div class="card-title">Subtotal (sin IVA)</div><div class="card-value" style="font-size:16px;">${fmt(tMonto)}</div></div>
+    <div class="card"><div class="card-title">IVA total</div><div class="card-value" style="font-size:16px;">${fmt(tIva)}</div></div>
+    <div class="card"><div class="card-title">Total con IVA</div><div class="card-value" style="font-size:16px;color:var(--acc);">${fmt(tTotal)}</div></div>`;
+ 
+  // Tabla detalle
+  const tbody=document.getElementById('rep-tbody');
+  const tfoot=document.getElementById('rep-tfoot');
+  if(!gs.length){
+    tbody.innerHTML='<tr><td colspan="10" style="text-align:center;color:var(--txt2);padding:16px;">Sin gastos en el período / filtro seleccionado</td></tr>';
+    tfoot.innerHTML='';
+  }else{
+    tbody.innerHTML=gs.map(g=>{
+      const v=viajes.find(x=>x.id===g.viaje_id);
+      const total=(+g.monto||0)+(+g.iva||0);
+      return `<tr>
+        <td>${g.fecha}</td>
+        <td>${v?v.codigo:'—'}</td>
+        <td>${g.proveedor||'—'}</td>
+        <td><span class="tag tag-cat">${g.categoria||'—'}</span></td>
+        <td>${g.tipo_comprobante||'—'}</td>
+        <td>${g.numero_folio||'—'}</td>
+        <td>${g.moneda}</td>
+        <td style="text-align:right;">${fmt(+g.monto||0,g.moneda)}</td>
+        <td style="text-align:right;">${(+g.iva||0)>0?fmt(+g.iva,g.moneda):'—'}</td>
+        <td style="text-align:right;font-weight:500;">${fmt(total,g.moneda)}</td>
+      </tr>`;
+    }).join('');
+    tfoot.innerHTML=`<tr style="font-weight:600;border-top:1.5px solid var(--bdr);">
+      <td colspan="7">TOTAL (${gs.length} registros)</td>
+      <td style="text-align:right;">${fmt(tMonto)}</td>
+      <td style="text-align:right;">${fmt(tIva)}</td>
+      <td style="text-align:right;color:var(--acc);">${fmt(tTotal)}</td>
+    </tr>`;
+  }
+ 
+  // Gráfico por categoría
+  const catTotals=TODAS_CATS.map(c=>({c,t:gs.filter(g=>g.categoria===c).reduce((s,g)=>s+(+g.monto||0),0)})).filter(x=>x.t>0);
+  const maxCat=Math.max(...catTotals.map(x=>x.t),1);
+  document.getElementById('rep-cat-chart').innerHTML=catTotals.length
+    ?catTotals.map(x=>`<div class="bar-row"><div class="bar-label">${x.c}</div><div class="pbar-wrap"><div class="pbar" style="width:${(x.t/maxCat*100).toFixed(1)}%"></div></div><div class="bar-amt">${fmt(x.t)}</div></div>`).join('')
+    :'<div style="font-size:12px;color:var(--txt2);">Sin datos</div>';
+ 
+  // Gráfico por viaje
+  const viajeMap={};
+  gs.forEach(g=>{
+    const k=g.viaje_id||'sin-viaje';
+    if(!viajeMap[k]) viajeMap[k]={label:(viajes.find(v=>v.id===k)?.codigo||'Sin viaje'),t:0};
+    viajeMap[k].t+=(+g.monto||0);
   });
-  const rows=Object.values(grp);
-  el.innerHTML=rows.length?`<div class="tbl-wrap"><table><thead><tr><th>Aseguradora</th><th>Viajes</th><th>Clientes</th><th>Gasto total</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.aseg}</td><td>${r.viajes}</td><td>${[...r.clientes].join(', ')||'—'}</td><td><strong>${fmt(r.total)}</strong></td></tr>`).join('')}</tbody></table></div>`:'<div style="font-size:12px;color:var(--txt2);">Sin datos</div>';
+  const vRows=Object.values(viajeMap).sort((a,b)=>b.t-a.t);
+  const maxV=Math.max(...vRows.map(x=>x.t),1);
+  document.getElementById('rep-viaje-chart').innerHTML=vRows.length
+    ?vRows.map(x=>`<div class="bar-row"><div class="bar-label">${x.label}</div><div class="pbar-wrap"><div class="pbar" style="width:${(x.t/maxV*100).toFixed(1)}%"></div></div><div class="bar-amt">${fmt(x.t)}</div></div>`).join('')
+    :'<div style="font-size:12px;color:var(--txt2);">Sin datos</div>';
+}
+ 
+// ── EXPORTACIONES ─────────────────────────────────────────────────────────────
+function gastosFiltradosParaExport(){
+  return filtrarGastos().map(g=>{
+    const v=viajes.find(x=>x.id===g.viaje_id);
+    return {
+      Fecha: g.fecha,
+      Viaje: v?v.codigo:'',
+      Cliente: v?v.cliente||'':'',
+      Aseguradora: v?v.aseguradora||'':'',
+      Proveedor: g.proveedor||'',
+      RFC: g.rfc_proveedor||'',
+      Categoria: g.categoria||'',
+      Tipo: g.tipo_comprobante||'',
+      Folio: g.numero_folio||'',
+      Moneda: g.moneda||'MXN',
+      Monto: +(+g.monto||0).toFixed(2),
+      IVA: +(+g.iva||0).toFixed(2),
+      Total: +((+g.monto||0)+(+g.iva||0)).toFixed(2),
+      Notas: g.notas||''
+    };
+  });
+}
+ 
+function exportCSV(){
+  const rows=gastosFiltradosParaExport();
+  if(!rows.length){alert('No hay datos para exportar.');return;}
+  const cols=Object.keys(rows[0]);
+  const lines=[cols.join(','),...rows.map(r=>cols.map(c=>{
+    const v=String(r[c]).replace(/"/g,'""');
+    return v.includes(',')||v.includes('"')||v.includes('\n')?`"${v}"`:v;
+  }).join(','))];
+  const blob=new Blob(['﻿'+lines.join('\n')],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`gastos_${today()}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+ 
+function exportExcel(){
+  const rows=gastosFiltradosParaExport();
+  if(!rows.length){alert('No hay datos para exportar.');return;}
+  const cols=Object.keys(rows[0]);
+  // Generar XML de Excel (formato SpreadsheetML compatible con Excel/LibreOffice)
+  const numCols=['Monto','IVA','Total'];
+  const xmlRows=rows.map(r=>'<Row>'+cols.map(c=>{
+    const v=r[c];
+    if(numCols.includes(c))return `<Cell><Data ss:Type="Number">${v}</Data></Cell>`;
+    return `<Cell><Data ss:Type="String">${String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</Data></Cell>`;
+  }).join('')+'</Row>').join('');
+  const xmlHeader='<Row>'+cols.map(c=>`<Cell ss:StyleID="h"><Data ss:Type="String">${c}</Data></Cell>`).join('')+'</Row>';
+  const xml=`<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+<Styles>
+  <Style ss:ID="h"><Font ss:Bold="1"/><Interior ss:Color="#E6F1FB" ss:Pattern="Solid"/></Style>
+</Styles>
+<Worksheet ss:Name="Gastos">
+<Table>${xmlHeader}${xmlRows}</Table>
+</Worksheet>
+</Workbook>`;
+  const blob=new Blob([xml],{type:'application/vnd.ms-excel;charset=utf-8;'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`gastos_${today()}.xls`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+ 
+function exportPDF(){
+  const rows=gastosFiltradosParaExport();
+  if(!rows.length){alert('No hay datos para exportar.');return;}
+  const desde=document.getElementById('rep-desde')?.value||'';
+  const hasta=document.getElementById('rep-hasta')?.value||'';
+  const tMonto=rows.reduce((s,r)=>s+r.Monto,0);
+  const tIva=rows.reduce((s,r)=>s+r.IVA,0);
+  const tTotal=rows.reduce((s,r)=>s+r.Total,0);
+  const filas=rows.map(r=>`
+    <tr>
+      <td>${r.Fecha}</td><td>${r.Viaje}</td><td>${r.Proveedor}</td>
+      <td>${r.Categoria}</td><td>${r.Folio}</td><td>${r.Moneda}</td>
+      <td class="num">${r.Monto.toLocaleString('es-MX',{minimumFractionDigits:2})}</td>
+      <td class="num">${r.IVA>0?r.IVA.toLocaleString('es-MX',{minimumFractionDigits:2}):''}</td>
+      <td class="num"><strong>${r.Total.toLocaleString('es-MX',{minimumFractionDigits:2})}</strong></td>
+    </tr>`).join('');
+  const html=`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+<title>Reporte de Gastos</title>
+<style>
+  body{font-family:Arial,sans-serif;font-size:10px;color:#1a1a1a;margin:20px;}
+  h2{font-size:14px;margin-bottom:2px;}
+  .sub{font-size:10px;color:#666;margin-bottom:14px;}
+  .kpis{display:flex;gap:20px;margin-bottom:14px;}
+  .kpi{border:1px solid #ddd;border-radius:6px;padding:8px 14px;min-width:120px;}
+  .kpi-label{font-size:9px;color:#888;}
+  .kpi-value{font-size:13px;font-weight:600;color:#185FA5;}
+  table{width:100%;border-collapse:collapse;margin-top:8px;}
+  th{background:#185FA5;color:white;padding:5px 7px;text-align:left;font-size:9px;}
+  td{padding:4px 7px;border-bottom:1px solid #eee;font-size:9px;}
+  tr:nth-child(even) td{background:#f7f9fd;}
+  .num{text-align:right;}
+  tfoot td{font-weight:600;border-top:2px solid #185FA5;background:#E6F1FB;}
+  @media print{body{margin:0;}}
+</style></head><body>
+<h2>Reporte de Gastos — AjustadorGastos</h2>
+<div class="sub">Período: ${desde||'inicio'} — ${hasta||'hoy'} &nbsp;|&nbsp; Generado: ${new Date().toLocaleDateString('es-MX')}</div>
+<div class="kpis">
+  <div class="kpi"><div class="kpi-label">Comprobantes</div><div class="kpi-value">${rows.length}</div></div>
+  <div class="kpi"><div class="kpi-label">Subtotal</div><div class="kpi-value">${tMonto.toLocaleString('es-MX',{minimumFractionDigits:2})}</div></div>
+  <div class="kpi"><div class="kpi-label">IVA</div><div class="kpi-value">${tIva.toLocaleString('es-MX',{minimumFractionDigits:2})}</div></div>
+  <div class="kpi"><div class="kpi-label">Total con IVA</div><div class="kpi-value">${tTotal.toLocaleString('es-MX',{minimumFractionDigits:2})}</div></div>
+</div>
+<table>
+<thead><tr><th>Fecha</th><th>Viaje</th><th>Proveedor</th><th>Categoría</th><th>Folio</th><th>Mon.</th><th class="num">Monto</th><th class="num">IVA</th><th class="num">Total</th></tr></thead>
+<tbody>${filas}</tbody>
+<tfoot><tr><td colspan="6">TOTAL (${rows.length} registros)</td>
+  <td class="num">${tMonto.toLocaleString('es-MX',{minimumFractionDigits:2})}</td>
+  <td class="num">${tIva.toLocaleString('es-MX',{minimumFractionDigits:2})}</td>
+  <td class="num">${tTotal.toLocaleString('es-MX',{minimumFractionDigits:2})}</td>
+</tr></tfoot>
+</table>
+<script>window.onload=()=>window.print();<\/script>
+</body></html>`;
+  const w=window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
 }
  
 function showTab(t,btn){
