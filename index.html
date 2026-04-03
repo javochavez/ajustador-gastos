@@ -260,7 +260,8 @@
                 <option value="kilometraje">Kilometraje</option>
                 <option value="viaticos">Viáticos</option>
                 <option value="propina">Propina</option>
-                <option value="honorarios">Honorarios</option>
+                <option value="alimentos">Alimentos</option>
+          <option value="honorarios">Honorarios</option>
                 <option value="otros">Otros</option>
               </select>
             </div>
@@ -308,7 +309,8 @@
             <option value="kilometraje">Kilometraje</option>
             <option value="viaticos">Viáticos</option>
             <option value="propina">Propina</option>
-            <option value="honorarios">Honorarios</option>
+            <option value="alimentos">Alimentos</option>
+          <option value="honorarios">Honorarios</option>
             <option value="otros">Otros</option>
           </select>
         </div>
@@ -352,7 +354,8 @@
                 <option value="kilometraje">Kilometraje</option>
                 <option value="viaticos">Viáticos</option>
                 <option value="propina">Propina</option>
-                <option value="honorarios">Honorarios</option>
+                <option value="alimentos">Alimentos</option>
+          <option value="honorarios">Honorarios</option>
                 <option value="otros">Otros</option>
               </select>
             </div>
@@ -477,6 +480,7 @@
           <option value="kilometraje">Kilometraje</option>
           <option value="viaticos">Viáticos</option>
           <option value="propina">Propina</option>
+          <option value="alimentos">Alimentos</option>
           <option value="honorarios">Honorarios</option>
           <option value="otros">Otros</option>
         </select>
@@ -526,7 +530,8 @@
           <option value="avion">Avión</option><option value="taxi">Taxi</option>
           <option value="autobus">Autobús</option><option value="peajes">Peajes</option>
           <option value="kilometraje">Kilometraje</option><option value="viaticos">Viáticos</option>
-          <option value="propina">Propina</option><option value="honorarios">Honorarios</option>
+          <option value="propina">Propina</option><option value="alimentos">Alimentos</option>
+          <option value="honorarios">Honorarios</option>
           <option value="otros">Otros</option>
         </select>
       </div>
@@ -568,9 +573,9 @@ window._authMode='login';
 window.addEventListener('load',()=>{
   db=window.supabase.createClient(SURL,SKEY);
   document.getElementById('c-fecha').value=today();
-  const d=new Date(); d.setDate(1);
-  document.getElementById('rep-desde').value=d.toISOString().slice(0,10);
-  document.getElementById('rep-hasta').value=today();
+  // Sin filtro de fecha por defecto
+  document.getElementById('rep-desde').value='';
+  document.getElementById('rep-hasta').value='';
   db.auth.onAuthStateChange((_,session)=>{
     user=session?.user||null;
     if(user){showApp();loadAll();}else{showAuthScreen();}
@@ -717,19 +722,25 @@ function populateSelects(){
 }
  
 // ── REPORTES ─────────────────────────────────────────────────────────────────
-const TODAS_CATS=['hospedaje','transporte','avion','taxi','autobus','peajes','kilometraje','viaticos','propina','honorarios','otros'];
+const TODAS_CATS=['hospedaje','transporte','avion','taxi','autobus','peajes','kilometraje','viaticos','propina','alimentos','honorarios','otros'];
  
 function filtrarGastos(){
-  const desde=document.getElementById('rep-desde')?.value||'';
-  const hasta=document.getElementById('rep-hasta')?.value||'';
+  const desdeStr=document.getElementById('rep-desde')?.value||'';
+  const hastaStr=document.getElementById('rep-hasta')?.value||'';
   const vid=document.getElementById('rep-viaje-filtro')?.value||'';
   const cat=document.getElementById('rep-cat-filtro')?.value||'';
-  return gastos.filter(g=>
-    (!desde||g.fecha>=desde)&&
-    (!hasta||g.fecha<=hasta)&&
-    (!vid||g.viaje_id===vid)&&
-    (!cat||g.categoria===cat)
-  );
+  // Convertir a timestamps para comparación correcta
+  const desde=desdeStr?new Date(desdeStr+'T00:00:00').getTime():null;
+  const hasta=hastaStr?new Date(hastaStr+'T23:59:59').getTime():null;
+  return gastos.filter(g=>{
+    if(!g.fecha) return false;
+    const gFecha=new Date(g.fecha+'T12:00:00').getTime();
+    if(desde&&gFecha<desde) return false;
+    if(hasta&&gFecha>hasta) return false;
+    if(vid&&g.viaje_id!==vid) return false;
+    if(cat&&g.categoria!==cat) return false;
+    return true;
+  });
 }
  
 function renderReportes(){
